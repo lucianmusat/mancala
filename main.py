@@ -1,13 +1,11 @@
-from board import Board
-from player import Player
+from player import HumanPlayer
 from game import Game
 
 
 def main():
-    player1 = Player(1)
-    player2 = Player(2)
-    board = Board(player1, player2)
-    mancala_game = Game(board)
+    player1 = HumanPlayer(1)
+    player2 = HumanPlayer(2)
+    mancala_game = Game(player1, player2)
     winner = mancala_game.start()
     print(f"Player {winner} won!")
 
