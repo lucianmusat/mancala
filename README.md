@@ -6,7 +6,7 @@ Can be played online here: [TBD](#)
 
 ### Gameplay
 The player who begins with the first move picks up all the stones in any of his
-own six pits, and sows the stones on to the right, one in each of the following
+own six pits, and stows the stones on to the right, one in each of the following
 pits, including his own big pit. No stones are put in the opponents' big pit. If the
 player's last stone lands in his own big pit, he gets another turn. This can be
 repeated several times before it's the other player's turn.

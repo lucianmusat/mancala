@@ -1,5 +1,7 @@
 from abc import ABC
 
+from utils import MoveResult
+
 
 class Player(ABC):
 
@@ -18,17 +20,27 @@ class Player(ABC):
             return False
         return True
 
-    def move(self, other_player) -> bool:
+    def move(self, other_player) -> MoveResult:
+        raise NotImplementedError
+
+    # Mostly for testing purposes
+    def move_pit(self, pit: int, other_player) -> MoveResult:
         raise NotImplementedError
 
 
 class HumanPlayer(Player):
-    def move(self, other_player) -> bool:
+    def move(self, other_player) -> MoveResult:
         # Game logic
-        pit = int(input(f"Player {self.id} move [1-6]: ")) - 1
+        pit = input(f"Player {self.id} move [1-6]: ")
+        if not pit.isnumeric():
+            return MoveResult.Invalid
+        # Because we chose 1 based
+        pit = int(pit) - 1
         if not self.legal_move(pit):
-            return False
+            return MoveResult.Invalid
+        return self.move_pit(pit, other_player)
 
+    def move_pit(self, pit: int, other_player) -> MoveResult:
         available_stones = self.pits[pit]
         assert available_stones > 0, "No stones to pick!"
         self.pits[pit] = 0
@@ -39,19 +51,33 @@ class HumanPlayer(Player):
                     print(f"Adding stone to pit {i}. Available stones: {available_stones}")
                     self.pits[i] += 1
                     available_stones -= 1
+                    # Landed on an empty pit
+                    if available_stones == 0 and self.pits[i] == 1:
+                        print("Taking opponents stones")
+                        self.pits[i] = 0
+                        opposite_stones = other_player.pits[5 - i]
+                        other_player.pits[5 - i] = 0
+                        self.big_pit += opposite_stones + 1
+                else:
+                    break
             # If we have stones still in the hand put it in the big pit
             if available_stones > 0:
                 print(f"Adding a stone to the big pit. Available stones: {available_stones}")
                 self.big_pit += 1
                 available_stones -= 1
+                # Last stone landed in own big pit
+                if available_stones == 0:
+                    return MoveResult.InOwnBigPit
             # If we still have stones in the hand start putting in player2 pits
             if available_stones > 0:
                 for i in range(0, 6):
                     print(f"Available stones: {available_stones}. Adding a stone to the other player's pit {i}")
                     other_player.pits[i] += 1
                     available_stones -= 1
+                    if available_stones == 0:
+                        break
             # Still have stones, need to start from the beginning
             if available_stones > 0:
                 print(f"Still have stones left: {available_stones}, starting over")
                 pit = -1
-        return True
+        return MoveResult.Valid
