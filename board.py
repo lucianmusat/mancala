@@ -6,38 +6,22 @@ from utils import MoveResult
 class Board:
 
     def __init__(self):
-        self.player_one_big_pit = 0
-        self.player_two_big_pit = 0
-        self.player_one_pits = [6] * 6
-        self.player_two_pits = [6] * 6
+        self.internal_player_pits = {1: [6] * 6, 2: [6] * 6}
+        self.internal_player_big_pit = {1: 0, 2: 0}
 
     def player_big_pit(self, player_id: int) -> int:
-        if player_id == 1:
-            return self.player_one_big_pit
-        elif player_id == 2:
-            return self.player_two_big_pit
-        return -1
+        return self.internal_player_big_pit[player_id]
 
     def player_pits(self, player_id: int) -> List[int]:
-        if player_id == 1:
-            return self.player_one_pits
-        elif player_id == 2:
-            return self.player_two_pits
-        return []
+        return self.internal_player_pits[player_id]
 
     def add_stones_to_big_pit(self, player_id: int, stones: int) -> None:
-        if stones > 0:
-            if player_id == 1:
-                self.player_one_big_pit += stones
-            elif player_id == 2:
-                self.player_two_big_pit += stones
+        assert stones > 0
+        self.internal_player_big_pit[player_id] += stones
 
     def add_stones_to_pit(self, player_id: int, index: int, stones: int) -> None:
-        if stones > 0:
-            if player_id == 1:
-                self.player_one_pits[index] += stones
-            elif player_id == 2:
-                self.player_two_pits[index] += stones
+        assert stones > 0
+        self.internal_player_pits[player_id][index] += stones
 
     def increment_pit(self, player_id: int, index: int) -> None:
         self.add_stones_to_pit(player_id, index, 1)
@@ -46,16 +30,14 @@ class Board:
         self.add_stones_to_big_pit(player_id, 1)
 
     def reset_pit(self, player_id: int, index: int) -> None:
-        if player_id == 1:
-            self.player_one_pits[index] = 0
-        elif player_id == 2:
-            self.player_two_pits[index] = 0
+        self.internal_player_pits[player_id][index] = 0
 
-    def reset_all_pits(self, player_id: int) -> None:
-        if player_id == 1:
-            self.player_one_pits = [0] * 6
-        elif player_id == 2:
-            self.player_two_pits = [0] * 6
+    def clear_all_small_pits(self, player_id: int) -> None:
+        self.internal_player_pits[player_id] = [0] * 6
+
+    def reset_board(self) -> None:
+        self.internal_player_pits = {1: [6] * 6, 2: [6] * 6}
+        self.internal_player_big_pit = {1: 0, 2: 0}
 
     def move_pit(self, player_id: int, pit: int) -> MoveResult:
         """
@@ -67,7 +49,7 @@ class Board:
         landed inside its own big pit
         """
         other_player_id = 1 if player_id == 2 else 2
-        available_stones = self.player_pits(player_id)[pit]
+        available_stones = self.internal_player_pits[player_id][pit]
         assert available_stones > 0, "No stones to pick!"
         self.reset_pit(player_id, pit)
         # Put stones in the next pits
@@ -78,7 +60,7 @@ class Board:
                     self.increment_pit(player_id, i)
                     available_stones -= 1
                     # Landed on an empty pit
-                    if available_stones == 0 and self.player_pits(player_id)[i] == 1:
+                    if available_stones == 0 and self.internal_player_pits[player_id][i] == 1:
                         print("Taking opponents stones")
                         self.reset_pit(player_id, i)
                         opposite_stones = self.player_pits(other_player_id)[5 - i]

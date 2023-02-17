@@ -11,8 +11,8 @@ class Player:
         assert self.id in [1, 2], "Must be either player 1 or 2!"
         self.move_strategy = move_strategy
 
-    def move(self) -> MoveResult:
-        return self.move_strategy.move(self.id)
+    def move(self, pit: int) -> MoveResult:
+        return self.move_strategy.move_pit(self.id, pit)
 
     @property
     def big_pit(self) -> int:
@@ -25,9 +25,9 @@ class Player:
     def add_stones_to_big_pit(self, stones: int) -> None:
         self.move_strategy.add_stones_to_big_pit(self.id, stones)
 
-    def reset_all_pits(self):
-        self.move_strategy.reset_all_pits(self.id)
+    def clear_all_small_pits(self):
+        self.move_strategy.clear_all_small_pits(self.id)
 
     def collect_all_stones(self):
         self.add_stones_to_big_pit(sum(self.pits))
-        self.reset_all_pits()
+        self.clear_all_small_pits()
