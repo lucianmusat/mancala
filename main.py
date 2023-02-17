@@ -1,10 +1,14 @@
-from player import HumanPlayer
+from move import HumanMove
+from player import Player
+from board import Board
 from game import Game
 
 
 def main():
-    player1 = HumanPlayer(1)
-    player2 = HumanPlayer(2)
+    board = Board()
+    human_move_strategy = HumanMove(board)
+    player1 = Player(1, human_move_strategy)
+    player2 = Player(2, human_move_strategy)
     mancala_game = Game(player1, player2)
     winner = mancala_game.start()
     print(f"Player {winner} won!")

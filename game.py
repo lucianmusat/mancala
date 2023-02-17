@@ -19,19 +19,14 @@ class Game:
               f"[{self.player1.pits[2]:02}][{self.player1.pits[3]:02}][{self.player1.pits[4]:02}]"
               f"[{self.player1.pits[5]:02}]  [{self.player1.big_pit:02}]")
 
-    @staticmethod
-    def collect_player_stones(player: Player) -> None:
-        player.big_pit += sum(player.pits)
-        player.pits = [0] * 6
-
     def check_win(self) -> int:
         assert self.player1.big_pit + self.player2.big_pit + sum(self.player1.pits) + sum(self.player2.pits) == 72, \
             f"There was a problem in the stone moves!"
         if all(stones == 0 for stones in self.player1.pits):
-            self.collect_player_stones(self.player2)
+            self.player2.collect_all_stones()
             return 1 if self.player1.big_pit > self.player2.big_pit else 2
         if all(stones == 0 for stones in self.player2.pits):
-            self.collect_player_stones(self.player1)
+            self.player1.collect_all_stones()
             return 1 if self.player1.big_pit > self.player2.big_pit else 2
         return 0
 
@@ -41,10 +36,10 @@ class Game:
         while not winner:
             self.render_board()
             if turn % 2 == 0:
-                if self.player1.move(self.player2) != MoveResult.Valid:
+                if self.player1.move() != MoveResult.Valid:
                     continue
             else:
-                if self.player2.move(self.player1) != MoveResult.Valid:
+                if self.player2.move() != MoveResult.Valid:
                     continue
             turn += 1
             winner = self.check_win()
