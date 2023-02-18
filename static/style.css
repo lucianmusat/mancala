@@ -7,6 +7,7 @@
     width: 1024px;
     margin: auto;
     padding: 20px;
+    overflow: hidden;
 }
 
 #main-board {
@@ -134,14 +135,15 @@
 
 #reset-button {
     border-radius: 50px;
-    height: 100px;
     width: 200px;
+    height: 100px;
     background-color: #f3cf7a;
     text-align: center;
     line-height: 100px;
     margin-top: 50px;
     margin-left: 412px;
     box-shadow: 5px 5px 10px #e0e0e0;
+    float: left;
 }
 
 a {
