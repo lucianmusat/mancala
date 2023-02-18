@@ -1,6 +1,6 @@
 # Mancala Game
 
-Can be played online here: [TBD](#)
+Can be played online [here](http://ec2-3-127-57-243.eu-central-1.compute.amazonaws.com/)
 
 ## Rules
 
