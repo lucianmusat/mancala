@@ -3,17 +3,35 @@
   background-size: 15px;
 }
 
+#container {
+    width: 1024px;
+    margin: auto;
+    padding: 20px;
+}
+
 #main-board {
     border-radius: 25px;
     height: 400px;
     width: 1024px;
-    margin-bottom: 100px;
+    margin-bottom: 50px;
+    margin-top: 100px;
     background-color: #855c46;
-    position: absolute;
-    top: 30%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     box-shadow: 10px 5px 10px #e0e0e0;
+}
+
+#status {
+    border-radius: 25px;
+    height: 100px;
+    width: 400px;
+    margin-top: 50px;
+    margin-bottom: 20px;
+    background-color: #fcf3dc;
+    box-shadow: 10px 5px 10px #e0e0e0;
+    margin-left: 312px;
+    text-align: center;
+    line-height: 100px;
+    font-size: 42px;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 .big-pit {
@@ -66,6 +84,18 @@
     float: left;
 }
 
+#p2-pits-selected {
+    height: 160px;
+    width: 660px;
+    border-radius: 25px;
+    overflow: hidden;
+    margin-top: 10px;
+    margin-left: 20px;
+    margin-right: 20px;
+    float: left;
+    box-shadow: 0px 0px 0px 1px #e0e0e0;
+}
+
 #p1-pits {
     height: 160px;
     width: 660px;
@@ -74,6 +104,18 @@
     margin-left: 20px;
     margin-right: 20px;
     float: left;
+}
+
+#p1-pits-selected {
+    height: 160px;
+    width: 660px;
+    border-radius: 25px;
+    overflow: hidden;
+    margin-top: 20px;
+    margin-left: 20px;
+    margin-right: 20px;
+    float: left;
+    box-shadow: 0px 0px 0px 1px #e0e0e0;
 }
 
 .pit {
@@ -95,12 +137,33 @@
     height: 100px;
     width: 200px;
     background-color: #f3cf7a;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     text-align: center;
     line-height: 100px;
-    margin-top: 100px;
+    margin-top: 50px;
+    margin-left: 412px;
     box-shadow: 5px 5px 10px #e0e0e0;
+}
+
+a {
+    text-decoration:none;
+}
+
+.blinking {
+
+    animation: opacity 2s ease-in-out infinite;
+    opacity: 1;
+}
+
+@keyframes opacity {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0
+  }
+
+  100% {
+    opacity: 1;
+  }
 }

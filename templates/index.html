@@ -7,39 +7,55 @@
 </head>
 
 <body class="square-grid">
-  <div id="main-board">
+  <div id="container">
+    <div id="main-board">
 
-    <div id="p2-big-pit" class="big-pit">
-      <div class="big-pit-value">{{ p2_big_pit_value }}</div>
-      <div id="p2-pit-name">Player 2</div>
-    </div>
-
-    <div id="pits-container">
-      <div id="p2-pits">
-        <a href="/select/user/2/pit/5"><div id="p2-6" class="pit"> {{ p2_6 }} </div></a>
-        <a href="/select/user/2/pit/4"><div id="p2-5" class="pit"> {{ p2_5 }} </div></a>
-        <a href="/select/user/2/pit/3"><div id="p2-4" class="pit"> {{ p2_4 }} </div></a>
-        <a href="/select/user/2/pit/2"><div id="p2-3" class="pit"> {{ p2_3 }} </div></a>
-        <a href="/select/user/2/pit/1"><div id="p2-2" class="pit"> {{ p2_2 }} </div></a>
-        <a href="/select/user/2/pit/0"><div id="p2-1" class="pit"> {{ p2_1 }} </div></a>
+      <div id="p2-big-pit" class="big-pit">
+        <div class="big-pit-value">{{ p2_big_pit_value }}</div>
+        <div id="p2-pit-name">Player 2</div>
       </div>
-      <div id="p1-pits">
-        <a href="/select/user/1/pit/0"><div id="p1-1" class="pit"> {{ p1_1 }} </div></a>
-        <a href="/select/user/1/pit/1"><div id="p1-2" class="pit"> {{ p1_2 }} </div></a>
-        <a href="/select/user/1/pit/2"><div id="p1-3" class="pit"> {{ p1_3 }} </div></a>
-        <a href="/select/user/1/pit/3"><div id="p1-4" class="pit"> {{ p1_4 }} </div></a>
-        <a href="/select/user/1/pit/4"><div id="p1-5" class="pit"> {{ p1_5 }} </div></a>
-        <a href="/select/user/1/pit/5"><div id="p1-6" class="pit"> {{ p1_6 }} </div></a>
+
+      <div id="pits-container">
+        {% if turn == 1 %}
+        <div id="p2-pits-selected">
+        {% else %}
+        <div id="p2-pits" >
+        {% endif %}
+          <a href="/select/user/2/pit/5"><div id="p2-6" class="pit"> {{ p2_6 }} </div></a>
+          <a href="/select/user/2/pit/4"><div id="p2-5" class="pit"> {{ p2_5 }} </div></a>
+          <a href="/select/user/2/pit/3"><div id="p2-4" class="pit"> {{ p2_4 }} </div></a>
+          <a href="/select/user/2/pit/2"><div id="p2-3" class="pit"> {{ p2_3 }} </div></a>
+          <a href="/select/user/2/pit/1"><div id="p2-2" class="pit"> {{ p2_2 }} </div></a>
+          <a href="/select/user/2/pit/0"><div id="p2-1" class="pit"> {{ p2_1 }} </div></a>
+        </div>
+        {% if turn == 0 %}
+        <div id="p1-pits-selected">
+        {% else %}
+        <div id="p1-pits" >
+        {% endif %}
+          <a href="/select/user/1/pit/0"><div id="p1-1" class="pit"> {{ p1_1 }} </div></a>
+          <a href="/select/user/1/pit/1"><div id="p1-2" class="pit"> {{ p1_2 }} </div></a>
+          <a href="/select/user/1/pit/2"><div id="p1-3" class="pit"> {{ p1_3 }} </div></a>
+          <a href="/select/user/1/pit/3"><div id="p1-4" class="pit"> {{ p1_4 }} </div></a>
+          <a href="/select/user/1/pit/4"><div id="p1-5" class="pit"> {{ p1_5 }} </div></a>
+          <a href="/select/user/1/pit/5"><div id="p1-6" class="pit"> {{ p1_6 }} </div></a>
+        </div>
       </div>
+
+      <div id="p1-big-pit" class="big-pit">
+        <div id="p1-pit-name">Player 1</div>
+        <div class="big-pit-value">{{ p1_big_pit_value }}</div>
+      </div>
+
     </div>
 
-    <div id="p1-big-pit" class="big-pit">
-      <div id="p1-pit-name">Player 1</div>
-      <div class="big-pit-value">{{ p1_big_pit_value }}</div>
-    </div>
-
+    {% if winner > 0 %}
+    <div id="status"><p class="blinking">Winner: {{ winner }}</p></div>
+    {% else %}
+    {% set turn = turn + 1 %}
+    <div id="status">Turn: Player{{ turn }}</div>
+    {% endif %}
+    <a href="/reset"><div id="reset-button">Start again</div></a>
   </div>
-
-  <a href="/reset"><div id="reset-button">Start again</div></a>
 </body>
 </html>
