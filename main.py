@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, status
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -82,3 +82,11 @@ def reset(request: Request):
     turn = 0
     board.reset_board()
     return populate_board(request)
+
+
+@app.exception_handler(status.HTTP_404_NOT_FOUND)
+@app.exception_handler(status.HTTP_422_UNPROCESSABLE_ENTITY)
+def http_exception_handler(request, _):
+    return templates.TemplateResponse("404.html", {
+        "request": request
+    })

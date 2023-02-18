@@ -47,11 +47,6 @@ class HumanMove(Move):
 
     def move_pit(self, player_id: int, pit: int) -> MoveResult:
         # This is a human player move, so we get the result from the user
-        # pit = input(f"Player {player_id} move [1-6]: ")
-        # if not pit.isnumeric():
-        #     return MoveResult.Invalid
-        # # Because we chose 1 based
-        # pit = int(pit) - 1
         if not self.legal_move(player_id, pit):
             return MoveResult.Invalid
         return self.board.move_pit(player_id, pit)
