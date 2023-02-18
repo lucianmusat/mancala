@@ -143,14 +143,15 @@
     margin-left: 412px;
     box-shadow: 5px 5px 10px #8c6954;
     float: left;
+    color: white;
 }
 
 a {
-    text-decoration:none;
+    text-decoration: none;
+    color: white;
 }
 
 .blinking {
-
     animation: opacity 2s ease-in-out infinite;
     opacity: 1;
 }

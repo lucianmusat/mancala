@@ -5,6 +5,13 @@ from typing import List
 
 
 class Player:
+    """
+    Class that represents a player.
+    Keeps track of its own id, which can either be 1 or 2.
+    Has a playing strategy that implements the move() method.
+    The move() method is the one that decides which pit will
+    be played next.
+    """
 
     def __init__(self, player_id: int, move_strategy: Move):
         self.id = player_id

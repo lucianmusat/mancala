@@ -1,9 +1,17 @@
+import os
+import logging
 from typing import List
 
 from utils import MoveResult
 
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
+
 
 class Board:
+    """
+    Class that represents the game board.
+    It keeps track of each pit and stones.
+    """
 
     def __init__(self):
         self.internal_player_pits = {1: [6] * 6, 2: [6] * 6}
@@ -43,7 +51,7 @@ class Board:
         """
         The main game logic. Calculates how the stones will be divided
         after choosing a pit.
-        :param player_id: Id of the player that moves
+        :param player_id: Id of the player that made the move
         :param pit: Player's pit index
         :return: If the move was valid or not, or special case when it
         landed inside its own big pit
@@ -56,12 +64,12 @@ class Board:
         while available_stones > 0:
             for i in range(pit + 1, 6):
                 if available_stones > 0:
-                    print(f"Adding stone to pit {i}. Available stones: {available_stones}")
+                    logging.debug(f"Adding stone to pit {i}. Available stones: {available_stones}")
                     self.increment_pit(player_id, i)
                     available_stones -= 1
                     # Landed on an empty pit
                     if available_stones == 0 and self.internal_player_pits[player_id][i] == 1:
-                        print("Taking opponents stones")
+                        logging.debug("Taking opponents stones")
                         self.reset_pit(player_id, i)
                         opposite_stones = self.player_pits(other_player_id)[5 - i]
                         self.reset_pit(other_player_id, 5 - i)
@@ -70,7 +78,7 @@ class Board:
                     break
             # If we have stones still in the hand put it in the big pit
             if available_stones > 0:
-                print(f"Adding a stone to the big pit. Available stones: {available_stones}")
+                logging.debug(f"Adding a stone to the big pit. Available stones: {available_stones}")
                 self.increment_big_pit(player_id)
                 available_stones -= 1
                 # Last stone landed in own big pit
@@ -79,13 +87,12 @@ class Board:
             # If we still have stones in the hand start putting in player2 pits
             if available_stones > 0:
                 for i in range(0, 6):
-                    print(f"Available stones: {available_stones}. Adding a stone to the other player's pit {i}")
+                    logging.debug(f"Available stones: {available_stones}. Adding a stone to the other player's pit {i}")
                     self.increment_pit(other_player_id, i)
                     available_stones -= 1
                     if available_stones == 0:
                         break
             # Still have stones, need to start from the beginning
             if available_stones > 0:
-                print(f"Still have stones left: {available_stones}, starting over")
                 pit = -1
         return MoveResult.Valid

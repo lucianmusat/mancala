@@ -1,6 +1,5 @@
 import pytest
 
-from game import Game
 from utils import MoveResult
 from player import Player
 from board import Board
@@ -17,26 +16,12 @@ class TestGame:
         player2 = Player(2, strategy)
         return board, player1, player2
 
-    def test_player_id(self, basic_setup):
-        _, player1, player2 = basic_setup
-        Game(player1, player2)
-
-    def test_player_same_id(self):
-        with pytest.raises(AssertionError) as context:
-            board = Board()
-            strategy = HumanMove(board)
-            player1 = Player(1, strategy)
-            player2 = Player(1, strategy)
-            Game(player1, player2)
-        assert "Cannot have two player" in str(context.value)
-
     def test_player_invalid_id(self):
         with pytest.raises(AssertionError) as context:
             board = Board()
             strategy = HumanMove(board)
             player1 = Player(1, strategy)
             player2 = Player(3, strategy)
-            Game(player1, player2)
         assert "Must be either player 1 or 2" in str(context.value)
 
     def test_player_basic_move(self, basic_setup):

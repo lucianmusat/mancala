@@ -66,7 +66,7 @@ def index(request: Request):
 @app.get("/select/")
 def pit_selected(user_id: int, pit: int, request: Request):
     global turn, winner
-    if not winner:
+    if not winner and user_id in [1, 2]:
         player = player1 if user_id == 1 else player2
         if (turn % 2 == 0 and player.id == 1) or (turn % 2 == 1 and player.id == 2):
             if player.move(pit) == MoveResult.Valid:
