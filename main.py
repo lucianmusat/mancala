@@ -1,11 +1,11 @@
+from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+
+from board import Board
 from move import HumanMove
 from player import Player
-from board import Board
 from utils import MoveResult
-
-from fastapi import FastAPI, Request
-from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
 
 board = Board()
 human_move_strategy = HumanMove(board)
@@ -58,13 +58,13 @@ def populate_board(request: Request) -> templates.TemplateResponse:
     })
 
 
-@app.get("/", status_code=200)
+@app.get("/")
 def index(request: Request):
     return populate_board(request)
 
 
-@app.get("/select/user/{user_id}/pit/{pit}", status_code=200)
-def pit_selected(request: Request, user_id: int, pit: int):
+@app.get("/select/")
+def pit_selected(user_id: int, pit: int, request: Request):
     global turn, winner
     if not winner:
         player = player1 if user_id == 1 else player2
@@ -75,7 +75,7 @@ def pit_selected(request: Request, user_id: int, pit: int):
     return populate_board(request)
 
 
-@app.get("/reset", status_code=200)
+@app.get("/reset")
 def reset(request: Request):
     global turn, winner
     winner = 0
