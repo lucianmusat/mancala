@@ -1,6 +1,5 @@
-.square-grid {
-  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoBAMAAAB+0KVeAAAAHlBMVEUAAABkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGSH0mEbAAAACnRSTlMAzDPDPPPYnGMw2CgMzQAAAChJREFUKM9jgAPOAgZMwGIwKkhXQSUY0BCCMxkEYUAsEM4cjI4fwYIAf2QMNbUsZjcAAAAASUVORK5CYII=');
-  background-size: 15px;
+.background {
+    background-color: #fae5cf;
 }
 
 #container {
@@ -17,7 +16,7 @@
     margin-bottom: 50px;
     margin-top: 100px;
     background-color: #855c46;
-    box-shadow: 10px 5px 10px #e0e0e0;
+    box-shadow: 10px 5px 10px #bf9880;
 }
 
 #status {
@@ -27,7 +26,7 @@
     margin-top: 50px;
     margin-bottom: 20px;
     background-color: #fcf3dc;
-    box-shadow: 10px 5px 10px #e0e0e0;
+    box-shadow: 10px 5px 10px #8c6954;
     margin-left: 312px;
     text-align: center;
     line-height: 100px;
@@ -136,13 +135,13 @@
 #reset-button {
     border-radius: 50px;
     width: 200px;
-    height: 100px;
-    background-color: #f3cf7a;
+    height: 50px;
+    background-color: #f79860;
     text-align: center;
-    line-height: 100px;
+    line-height: 50px;
     margin-top: 50px;
     margin-left: 412px;
-    box-shadow: 5px 5px 10px #e0e0e0;
+    box-shadow: 5px 5px 10px #8c6954;
     float: left;
 }
 
