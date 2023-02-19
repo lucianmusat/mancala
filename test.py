@@ -1,156 +1,170 @@
 import pytest
 
-from utils import MoveResult
-from player import Player
-from board import Board
-from move import HumanMove
+from game import Game
+from player import HumanPlayer
 
 
 class TestGame:
 
     @pytest.fixture(scope='function')
     def basic_setup(self):
-        board = Board()
-        strategy = HumanMove(board)
-        player1 = Player(1, strategy)
-        player2 = Player(2, strategy)
-        return board, player1, player2
+        players = {
+            0: HumanPlayer(),
+            1: HumanPlayer()
+        }
+        game = Game(players)
+        return game, players
 
-    def test_player_invalid_id(self):
-        with pytest.raises(AssertionError) as context:
-            board = Board()
-            strategy = HumanMove(board)
-            player1 = Player(1, strategy)
-            player2 = Player(3, strategy)
-        assert "Must be either player 1 or 2" in str(context.value)
+    def test_game_basic_move(self, basic_setup):
+        game, players = basic_setup
+        assert players[0].move(0) == (1, 5)
+        assert players[0].pits == [0, 7, 7, 7, 7, 7]
+        assert players[0].big_pit == 0
+        assert players[1].pits == [6, 6, 6, 6, 6, 6]
+        assert players[1].big_pit == 0
 
-    def test_player_basic_move(self, basic_setup):
-        board, player1, player2 = basic_setup
-        assert board.move_pit(player1.id, 0) == MoveResult.InOwnBigPit
-        assert player1.pits == [0, 7, 7, 7, 7, 7]
-        assert player1.big_pit == 1
-        assert player2.pits == [6, 6, 6, 6, 6, 6]
-        assert player2.big_pit == 0
+    def test_game_move_last(self, basic_setup):
+        game, players = basic_setup
+        assert players[0].move(5) == (6, 5)
+        assert players[0].pits == [6, 6, 6, 6, 6, 0]
+        assert players[0].big_pit == 0
+        assert players[1].pits == [6, 6, 6, 6, 6, 6]
+        assert players[1].big_pit == 0
 
-    def test_player_move_empty_pit(self, basic_setup):
-        board, player1, _ = basic_setup
-        board.internal_player_pits[1] = [0, 7, 7, 7, 7, 7]
-        board.internal_player_big_pit[1] = 1
-        board.internal_player_pits[2] = [6, 6, 6, 6, 6, 6]
-        board.internal_player_big_pit[2] = 0
-        with pytest.raises(AssertionError) as context:
-            board.move_pit(player1.id, 0)
-        assert "No stones to pick" in str(context.value)
+    def test_game_move_empty_pit(self, basic_setup):
+        game, players = basic_setup
+        game.players[0].pits = [0, 7, 7, 7, 7, 7]
+        game.players[0].big_pit = 1
+        game.players[1].pits = [6, 6, 6, 6, 6, 6]
+        game.players[1].big_pit = 0
+        assert game.calculate_move(0, 0, 0) == (-1, 0)
 
-    def test_player_move_twice(self, basic_setup):
-        board, player1, player2 = basic_setup
-        board.internal_player_pits[1] = [0, 7, 7, 7, 7, 7]
-        board.internal_player_big_pit[1] = 1
-        board.internal_player_pits[2] = [6, 6, 6, 6, 6, 6]
-        board.internal_player_big_pit[2] = 0
-        assert board.move_pit(player1.id, 1) == MoveResult.Valid
-        assert board.internal_player_pits[1] == [0, 0, 8, 8, 8, 8]
-        assert player1.big_pit == 2
-        assert player2.pits == [7, 7, 6, 6, 6, 6]
-        assert player2.big_pit == 0
+    def test_game_move_twice(self, basic_setup):
+        game, players = basic_setup
+        game.players[0].pits = [0, 7, 7, 7, 7, 7]
+        game.players[0].big_pit = 1
+        game.players[1].pits = [6, 6, 6, 6, 6, 6]
+        game.players[1].big_pit = 0
+        assert game.calculate_move(0, 1, 0) == (-1, 1)
+        assert game.players[0].pits == [0, 0, 8, 8, 8, 8]
+        assert game.players[0].big_pit == 2
+        assert game.players[1].pits == [7, 7, 6, 6, 6, 6]
+        assert game.players[1].big_pit == 0
 
-    def test_player_land_on_empty(self, basic_setup):
-        board, player1, player2 = basic_setup
-        board.internal_player_pits[1] = [1, 0, 8, 8, 8, 8]
-        board.internal_player_big_pit[1] = 2
-        board.internal_player_pits[2] = [0, 8, 7, 7, 7, 7]
-        board.internal_player_big_pit[2] = 1
-        assert board.move_pit(player1.id, 0) == MoveResult.Valid
-        assert player1.pits == [0, 0, 8, 8, 8, 8]
-        assert player1.big_pit == 10
-        assert player2.pits == [0, 8, 7, 7, 0, 7]
-        assert player2.big_pit == 1
+    def test_game_land_on_empty(self, basic_setup):
+        game, players = basic_setup
+        game.players[0].pits = [1, 0, 8, 8, 8, 8]
+        game.players[0].big_pit = 2
+        game.players[1].pits = [0, 8, 7, 7, 7, 7]
+        game.players[1].big_pit = 1
+        assert game.calculate_move(0, 0, 0) == (-1, 1)
+        assert game.players[0].pits == [0, 0, 8, 8, 8, 8]
+        assert game.players[0].big_pit == 10
+        assert game.players[1].pits == [0, 8, 7, 7, 0, 7]
+        assert game.players[1].big_pit == 1
 
     def test_land_on_empty_with_moves(self, basic_setup):
-        board, player1, player2 = basic_setup
-        assert board.move_pit(player1.id, 0) == MoveResult.InOwnBigPit
-        assert board.move_pit(player1.id, 1) == MoveResult.Valid
-        assert board.move_pit(player2.id, 0) == MoveResult.Valid
-        assert board.move_pit(player1.id, 0) == MoveResult.Valid
-        assert player1.pits == [0, 0, 8, 8, 8, 8]
-        assert player1.big_pit == 10
-        assert player2.pits == [0, 8, 7, 7, 0, 7]
-        assert player2.big_pit == 1
+        game, players = basic_setup
+        assert game.calculate_move(0, 0, 0) == (-1, 0)
+        assert game.calculate_move(0, 1, 0) == (-1, 1)
+        assert game.calculate_move(1, 0, 1) == (-1, 0)
+        assert game.calculate_move(0, 0, 0) == (-1, 1)
+        assert game.players[0].pits == [0, 0, 8, 8, 8, 8]
+        assert game.players[0].big_pit == 10
+        assert game.players[1].pits == [0, 8, 7, 7, 0, 7]
+        assert game.players[1].big_pit == 1
 
     def test_overflow_player1(self, basic_setup):
-        board, player1, player2 = basic_setup
-        board.internal_player_pits[1] = [0, 0, 6, 6, 12, 6]
-        board.internal_player_big_pit[1] = 12
-        board.internal_player_pits[2] = [6, 6, 6, 6, 6, 6]
-        board.internal_player_big_pit[2] = 0
-        assert board.move_pit(player1.id, 4) == MoveResult.Valid
-        assert player1.pits == [1, 1, 7, 7, 0, 7]
-        assert player1.big_pit == 13
-        assert player2.pits == [7, 7, 7, 7, 7, 7]
-        assert player2.big_pit == 0
+        game, players = basic_setup
+        game.players[0].pits = [2, 3, 9, 9, 2, 4]
+        game.players[0].big_pit = 6
+        game.players[1].pits = [2, 9, 8, 8, 8, 0]
+        game.players[1].big_pit = 2
+        assert game.calculate_move(0, 5, 0) == (-1, 1)
+        assert game.players[0].pits == [2, 3, 9, 9, 2, 0]
+        assert game.players[0].big_pit == 7
+        assert game.players[1].pits == [3, 10, 9, 8, 8, 0]
+        assert game.players[1].big_pit == 2
+
+    def test_overflow_player1_back_around(self, basic_setup):
+        game, players = basic_setup
+        game.players[0].pits = [2, 1, 9, 9, 1, 10]
+        game.players[0].big_pit = 3
+        game.players[1].pits = [2, 9, 8, 8, 8, 0]
+        game.players[1].big_pit = 2
+        assert game.calculate_move(0, 5, 0) == (-1, 1)
+        assert game.players[0].pits == [3, 2, 10, 9, 1, 0]
+        assert game.players[0].big_pit == 4
+        assert game.players[1].pits == [3, 10, 9, 9, 9, 1]
+        assert game.players[1].big_pit == 2
 
     def test_overflow_player2(self, basic_setup):
-        board, player1, player2 = basic_setup
-        board.internal_player_pits[1] = [6, 6, 6, 6, 6, 6]
-        board.internal_player_big_pit[1] = 0
-        board.internal_player_pits[2] = [0, 0, 6, 6, 12, 6]
-        board.internal_player_big_pit[2] = 12
-        assert board.move_pit(player2.id, 4) == MoveResult.Valid
-        assert player2.pits == [1, 1, 7, 7, 0, 7]
-        assert player2.big_pit == 13
-        assert player1.pits == [7, 7, 7, 7, 7, 7]
-        assert player1.big_pit == 0
+        game, players = basic_setup
+        game.players[0].pits = [0, 7, 7, 7, 7, 7]
+        game.players[0].big_pit = 1
+        game.players[1].pits = [6, 6, 6, 6, 6, 3]
+        game.players[1].big_pit = 3
+        assert game.calculate_move(1, 5, 1) == (-1, 0)
+        assert game.players[1].pits == [6, 6, 6, 6, 6, 0]
+        assert game.players[1].big_pit == 4
+        assert game.players[0].pits == [1, 8, 7, 7, 7, 7]
+        assert game.players[0].big_pit == 1
 
     def test_land_in_big_pit(self, basic_setup):
-        board, player1, player2 = basic_setup
-        board.internal_player_pits[1] = [6, 6, 6, 6, 15, 6]
-        board.internal_player_big_pit[1] = 0
-        board.internal_player_pits[2] = [6, 0, 0, 6, 6, 6]
-        board.internal_player_big_pit[2] = 1
-        assert board.move_pit(player1.id, 4) == MoveResult.InOwnBigPit
-        assert player1.pits == [7, 7, 7, 7, 1, 8]
-        assert player1.big_pit == 2
-        assert player2.pits == [7, 1, 1, 7, 7, 7]
-        assert player2.big_pit == 1
+        game, players = basic_setup
+        game.players[0].pits = [6, 6, 4, 6, 6, 6]
+        game.players[0].big_pit = 2
+        game.players[1].pits = [6, 6, 6, 6, 6, 6]
+        game.players[1].big_pit = 0
+        assert game.calculate_move(0, 2, 0) == (-1, 0)
+        assert game.players[0].pits == [6, 6, 0, 7, 7, 7]
+        assert game.players[0].big_pit == 3
+        assert game.players[1].pits == [6, 6, 6, 6, 6, 6]
+        assert game.players[1].big_pit == 0
 
+    # TODO: break into multiple tests
     def test_player(self, basic_setup):
-        board, player1, player2 = basic_setup
-        assert player1.id == 1
-        assert player2.id == 2
-        assert player1.big_pit == board.internal_player_big_pit[1]
-        assert player2.big_pit == board.internal_player_big_pit[2]
-        assert player1.pits == board.internal_player_pits[1]
-        assert player2.pits == board.internal_player_pits[2]
-        player1.clear_all_small_pits()
-        assert player1.pits == [0, 0, 0, 0, 0, 0]
-        player1.add_stones_to_big_pit(100)
-        assert player1.big_pit == 100
-        with pytest.raises(AssertionError):
-            player1.add_stones_to_big_pit(-5)
-        assert player1.big_pit == 100
-        board.internal_player_pits[2] = [1, 2, 3, 4, 5, 6]
-        player2.collect_all_stones()
-        assert player2.pits == [0, 0, 0, 0, 0, 0]
-        assert player2.big_pit == 21
+        game, players = basic_setup
+        assert game.players[0].big_pit == game.players[1].big_pit == 0
+        assert game.players[0].pits == game.players[0].pits == [6, 6, 6, 6, 6, 6]
+        assert players[0].move(0) == (1, 5)
+        assert players[0].pits == [0, 7, 7, 7, 7, 7]
+        game.players[0].reset()
+        assert game.players[0].big_pit == 0
+        assert game.players[0].pits == [6, 6, 6, 6, 6, 6]
+        assert players[0].move(5) == (6, 5)
+        assert players[0].pits == [6, 6, 6, 6, 6, 0]
+        game.players[0].pits = [6, 2, 6, 6, 6, 0]
+        assert players[0].move(1) == (0, 3)
+        assert players[0].pits == [6, 0, 7, 7, 6, 0]
+        game.players[0].reset()
+        with pytest.raises(AssertionError) as context:
+            game.players[0].add_stones(-5)
+            assert "Cannot add not-positive number of stones!" in str(context.value)
+        with pytest.raises(AssertionError) as context:
+            game.players[0].add_stones(0)
+            assert "Cannot add not-positive number of stones!" in str(context.value)
+        assert game.players[0].add_stones(3) == 0
+        assert game.players[0].add_stones(6) == 0
+        assert game.players[0].add_stones(7) == 1
+        assert players[0].pits == [9, 9, 9, 8, 8, 8]
+        players[0].collect_all_stones()
+        assert players[0].pits == [0, 0, 0, 0, 0, 0]
+        assert players[0].big_pit == 51
+        assert game.players[0].add_stones(4) == -1
 
-    def test_board(self, basic_setup):
-        board, player1, player2 = basic_setup
-        assert board.internal_player_big_pit[1] == 0
-        assert board.internal_player_big_pit[2] == 0
-        player2.add_stones_to_big_pit(5)
-        assert board.player_big_pit(player1.id) == 0
-        assert board.player_big_pit(player2.id) == 5
-        board.add_stones_to_big_pit(player1.id, 6)
-        assert board.player_big_pit(player1.id) == 6
-        board.increment_big_pit(player1.id)
-        assert board.player_big_pit(player1.id) == 7
-        assert board.player_pits(player1.id) == board.internal_player_pits[1] == [6, 6, 6, 6, 6, 6]
-        assert board.player_pits(player2.id) == board.internal_player_pits[2] == [6, 6, 6, 6, 6, 6]
-        board.add_stones_to_pit(player2.id, 3, 6)
-        assert board.player_pits(player2.id) == board.internal_player_pits[2] == [6, 6, 6, 12, 6, 6]
-        board.increment_pit(player1.id, 0)
-        assert board.player_pits(player1.id) == board.internal_player_pits[1] == [7, 6, 6, 6, 6, 6]
-        board.reset_pit(player1.id, 1)
-        assert board.player_pits(player1.id) == board.internal_player_pits[1] == [7, 0, 6, 6, 6, 6]
-        board.clear_all_small_pits(player1.id)
-        assert board.player_pits(player1.id) == board.internal_player_pits[1] == [0, 0, 0, 0, 0, 0]
+    def test_game_win(self, basic_setup):
+        game, players = basic_setup
+        assert game.check_win() == -1
+        game.players[0].pits = [0, 0, 0, 0, 0, 0]
+        game.players[1].pits = [12, 12, 12, 12, 12, 12]
+        game.players[1].collect_all_stones()
+        assert game.check_win() == 1
+        game.players[0].reset()
+        game.players[1].reset()
+        game.players[0].pits = [12, 12, 12, 12, 12, 12]
+        game.players[1].pits = [0, 0, 0, 0, 0, 0]
+        game.players[0].collect_all_stones()
+        assert game.check_win() == 0
+
+
