@@ -5,11 +5,18 @@ from typing import Dict
 from player import Player
 
 
-logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"))
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "WARNING"))
 
 
 class Game:
-
+    """
+    The Game class contains the main logic of the game.
+    It holds a reference to both players and calls the player's
+    move() method. If we still have stones to play after a move
+    it decides what is needed to be done next.
+    It also checks if the game has been won by any of the
+    players after each move.
+    """
     def __init__(self, players: Dict[int, Player]):
         self.players = players
 

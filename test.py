@@ -122,32 +122,45 @@ class TestGame:
         assert game.players[1].pits == [6, 6, 6, 6, 6, 6]
         assert game.players[1].big_pit == 0
 
-    # TODO: break into multiple tests
-    def test_player(self, basic_setup):
+    def test_player_move(self, basic_setup):
         game, players = basic_setup
         assert game.players[0].big_pit == game.players[1].big_pit == 0
         assert game.players[0].pits == game.players[0].pits == [6, 6, 6, 6, 6, 6]
         assert players[0].move(0) == (1, 5)
         assert players[0].pits == [0, 7, 7, 7, 7, 7]
-        game.players[0].reset()
-        assert game.players[0].big_pit == 0
-        assert game.players[0].pits == [6, 6, 6, 6, 6, 6]
+
+    def test_player_move_twice(self, basic_setup):
+        game, players = basic_setup
         assert players[0].move(5) == (6, 5)
         assert players[0].pits == [6, 6, 6, 6, 6, 0]
         game.players[0].pits = [6, 2, 6, 6, 6, 0]
         assert players[0].move(1) == (0, 3)
         assert players[0].pits == [6, 0, 7, 7, 6, 0]
-        game.players[0].reset()
+
+    def test_player_add_negative_stones(self, basic_setup):
+        game, players = basic_setup
         with pytest.raises(AssertionError) as context:
             game.players[0].add_stones(-5)
             assert "Cannot add not-positive number of stones!" in str(context.value)
+        assert players[0].pits == [6, 6, 6, 6, 6, 6]
+
+    def test_player_add_zero_stones(self, basic_setup):
+        game, players = basic_setup
         with pytest.raises(AssertionError) as context:
             game.players[0].add_stones(0)
             assert "Cannot add not-positive number of stones!" in str(context.value)
+        assert players[0].pits == [6, 6, 6, 6, 6, 6]
+
+    def test_player_add_stones(self, basic_setup):
+        game, players = basic_setup
         assert game.players[0].add_stones(3) == 0
         assert game.players[0].add_stones(6) == 0
         assert game.players[0].add_stones(7) == 1
         assert players[0].pits == [9, 9, 9, 8, 8, 8]
+
+    def test_player_collect_stones(self, basic_setup):
+        game, players = basic_setup
+        game.players[0].pits = [9, 9, 9, 8, 8, 8]
         players[0].collect_all_stones()
         assert players[0].pits == [0, 0, 0, 0, 0, 0]
         assert players[0].big_pit == 51

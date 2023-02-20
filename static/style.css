@@ -84,18 +84,6 @@
     float: left;
 }
 
-#p2-pits-selected {
-    height: 160px;
-    width: 660px;
-    border-radius: 25px;
-    overflow: hidden;
-    margin-top: 10px;
-    margin-left: 20px;
-    margin-right: 20px;
-    float: left;
-    box-shadow: 0px 0px 0px 1px #e0e0e0;
-}
-
 #p1-pits {
     height: 160px;
     width: 660px;
@@ -106,15 +94,8 @@
     float: left;
 }
 
-#p1-pits-selected {
-    height: 160px;
-    width: 660px;
+.selected-pits {
     border-radius: 25px;
-    overflow: hidden;
-    margin-top: 20px;
-    margin-left: 20px;
-    margin-right: 20px;
-    float: left;
     box-shadow: 0px 0px 0px 1px #e0e0e0;
 }
 

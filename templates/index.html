@@ -16,20 +16,12 @@
       </div>
 
       <div id="pits-container">
-        {% if turn == 1 %}
-        <div id="p2-pits-selected">
-        {% else %}
-        <div id="p2-pits" >
-        {% endif %}
+        <div id="p2-pits" class="{{ 'selected-pits' if turn == 1 }}">
           {% for pit in players[1].pits|reverse %}
           <a href="/select?user_id=1&pit={{ 5 - loop.index0 }}"><div class="pit"> {{ pit }} </div></a>
           {% endfor %}
         </div>
-        {% if turn == 0 %}
-        <div id="p1-pits-selected">
-        {% else %}
-        <div id="p1-pits" >
-        {% endif %}
+        <div id="p1-pits" class="{{ 'selected-pits' if turn == 0 }}">
           {% for pit in players[0].pits %}
           <a href="/select?user_id=0&pit={{ loop.index0 }}"><div class="pit"> {{ pit }} </div></a>
           {% endfor %}
