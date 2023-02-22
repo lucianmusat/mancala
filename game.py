@@ -22,7 +22,7 @@ class Game:
 
     def check_win(self) -> int:
         assert self.players[0].big_pit + self.players[1].big_pit + \
-               sum(self.players[0].pits) + sum(self.players[1].pits) == 72, f"There was a problem in the stone moves!"
+               sum(self.players[0].pits + self.players[1].pits) == 72, f"There was a problem in the stone moves!"
         if all(stones == 0 for stones in self.players[0].pits) or all(stones == 0 for stones in self.players[1].pits):
             for player in self.players.values():
                 player.collect_all_stones()
