@@ -8,7 +8,7 @@ from game import Game
 
 app = FastAPI(
     title="Lucian's Mancala Game",
-    description="A very basic FastAPI implementation of the Mancala game",
+    description="A basic implementation of the Mancala game",
 )
 
 app.mount("/static", StaticFiles(directory="static"), name="static")

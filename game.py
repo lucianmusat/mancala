@@ -2,8 +2,7 @@ import os
 import logging
 from typing import Dict
 
-from player import Player
-
+from player import Player, NUMBER_OF_PITS, STARTING_STONES
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "WARNING"))
 
@@ -17,12 +16,14 @@ class Game:
     It also checks if the game has been won by any of the
     players after each move.
     """
+
     def __init__(self, players: Dict[int, Player]):
         self.players = players
 
     def check_win(self) -> int:
         assert self.players[0].big_pit + self.players[1].big_pit + \
-               sum(self.players[0].pits + self.players[1].pits) == 72, f"There was a problem in the stone moves!"
+               sum(self.players[0].pits) + sum(self.players[1].pits) == 2 * NUMBER_OF_PITS * STARTING_STONES, \
+               f"There was a problem in the stone moves!"
         if all(stones == 0 for stones in self.players[0].pits) or all(stones == 0 for stones in self.players[1].pits):
             for player in self.players.values():
                 player.collect_all_stones()
@@ -38,7 +39,7 @@ class Game:
                 if remaining_stones == -1:
                     self.players[user_id].steal_from(self.players[1 - user_id], current_pit)
                     remaining_stones = 0
-                elif current_pit == 5 and remaining_stones > 0:
+                elif current_pit == NUMBER_OF_PITS - 1 and remaining_stones > 0:
                     logging.info(f"Adding to big pit")
                     self.players[user_id].big_pit += 1
                     remaining_stones -= 1
