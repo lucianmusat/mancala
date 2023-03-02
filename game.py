@@ -2,7 +2,7 @@ import os
 import logging
 from typing import Dict
 
-from player import Player, NUMBER_OF_PITS, STARTING_STONES
+from player import Player, NUMBER_OF_PITS, STARTING_STONES, HAVE_TO_STEAL
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "WARNING"))
 
@@ -36,7 +36,7 @@ class Game:
             remaining_stones, current_pit = self.players[user_id].move(pit)
             while remaining_stones != 0:
                 logging.info(f"Remaining stones: {remaining_stones} current pit: {current_pit}")
-                if remaining_stones == -1:
+                if remaining_stones == HAVE_TO_STEAL:
                     self.players[user_id].steal_from(self.players[1 - user_id], current_pit)
                     remaining_stones = 0
                 elif current_pit == NUMBER_OF_PITS - 1 and remaining_stones > 0:
@@ -47,7 +47,7 @@ class Game:
                         logging.info(f"Adding to other player's pits")
                         remaining_stones = self.players[1 - user_id].add_stones(remaining_stones)
                         # Don't steal stones if we're landing on empty on the other player's pits
-                        if remaining_stones == -1:
+                        if remaining_stones == HAVE_TO_STEAL:
                             remaining_stones = 0
                         current_pit = 0
                     else:

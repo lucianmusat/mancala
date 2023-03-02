@@ -5,6 +5,7 @@ from fastapi.templating import Jinja2Templates
 from player import HumanPlayer
 from game import Game
 
+NO_WINNER = -1
 
 app = FastAPI(
     title="Lucian's Mancala Game",
@@ -20,7 +21,7 @@ app.players = {
 }
 app.game = Game(app.players)
 app.turn = 0
-app.winner = -1
+app.winner = NO_WINNER
 
 
 def populate_board(request: Request) -> templates.TemplateResponse:
@@ -65,7 +66,7 @@ def reset(request: Request):
     :return: TemplateResponse that will render the freshly reset board
     """
     app.turn = 0
-    app.winner = -1
+    app.winner = NO_WINNER
     for player in app.players.values():
         player.reset()
     return populate_board(request)

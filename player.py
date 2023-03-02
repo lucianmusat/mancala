@@ -6,6 +6,7 @@ logging.basicConfig(level=os.environ.get("LOGLEVEL", "WARNING"))
 
 STARTING_STONES = 6
 NUMBER_OF_PITS = 6
+HAVE_TO_STEAL = -1
 
 
 class Player(ABC):
@@ -83,7 +84,7 @@ class HumanPlayer(Player):
             available_stones -= 1
             current_pit = i
             if self.pits[i] == 1 and available_stones == 0:
-                return -1, current_pit  # Landed on empty pit with last stone
+                return HAVE_TO_STEAL, current_pit  # Landed on empty pit with last stone
         return available_stones, current_pit
 
     def add_stones(self, stones: int) -> int:
@@ -94,7 +95,7 @@ class HumanPlayer(Player):
             stones -= 1
             current_pit = i
         if self.pits[current_pit] == 1 and stones == 0:
-            return -1
+            return HAVE_TO_STEAL
         return stones
 
     def collect_all_stones(self) -> None:
