@@ -15,6 +15,16 @@ app = FastAPI(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
+app.pebbles = {
+    0: "",
+    1: "1stone.png",
+    2: "2stones.png",
+    3: "3stones.png",
+    4: "4stones.png",
+    5: "5stones.png",
+    6: "6stones.png"
+}
+
 app.players = {
     0: HumanPlayer(),
     1: HumanPlayer()
@@ -28,6 +38,7 @@ def populate_board(request: Request) -> templates.TemplateResponse:
     return templates.TemplateResponse("index.html", {
         "request": request,
         "players": app.players,
+        "pebbles": app.pebbles,
         "turn": app.turn % 2,
         "winner": app.winner
     })
