@@ -2,7 +2,7 @@ import os
 import logging
 from typing import Dict
 
-from player import Player, NUMBER_OF_PITS, STARTING_STONES, HAVE_TO_STEAL
+from player import IPlayer, NUMBER_OF_PITS, STARTING_STONES, HAVE_TO_STEAL
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "WARNING"))
 
@@ -17,7 +17,7 @@ class Game:
     players after each move.
     """
 
-    def __init__(self, players: Dict[int, Player]):
+    def __init__(self, players: Dict[int, IPlayer]):
         self.players = players
 
     def check_win(self) -> int:
@@ -33,7 +33,8 @@ class Game:
     def calculate_move(self, user_id: int, pit: int, turn: int) -> (int, int):
         logging.info(f"Click on user {user_id} pit {pit}")
         if 0 < self.players[user_id].pits[pit] and (turn % 2 == user_id):
-            remaining_stones, current_pit = self.players[user_id].move(pit)
+            self.players[user_id].select_pit(pit)
+            remaining_stones, current_pit = self.players[user_id].move()
             while remaining_stones != 0:
                 logging.info(f"Remaining stones: {remaining_stones} current pit: {current_pit}")
                 if remaining_stones == HAVE_TO_STEAL:

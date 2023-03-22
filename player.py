@@ -1,15 +1,12 @@
-import os
-import logging
-from abc import ABC
+from abc import ABC, abstractmethod
 
-logging.basicConfig(level=os.environ.get("LOGLEVEL", "WARNING"))
 
 STARTING_STONES = 6
 NUMBER_OF_PITS = 6
 HAVE_TO_STEAL = -1
 
 
-class Player(ABC):
+class IPlayer(ABC):
     """
     A Player interface that is being used by the
     Game class.
@@ -18,18 +15,31 @@ class Player(ABC):
     def __init__(self):
         self.big_pit = 0
         self.pits = [STARTING_STONES] * NUMBER_OF_PITS
+        self.selected_pit = None
 
-    def move(self, pit: int) -> (int, int):
+    @abstractmethod
+    def select_pit(self, pit: int):
         """
-        Chose a pit to move from. In this case we
-        receive the pit index from the web interface.
+        Select which pit to move from next.
+        May not be used by AI players.
+        Human players receive the pit index from the web interface.
         :param pit: Chosen pit index
+        """
+        ...
+
+    @abstractmethod
+    def move(self) -> (int, int):
+        """
+        Chose a pit to move from.
+        For human players it works with the pit selected in the select_next_move() method.
+        For AI players it contains the logic to choose the pit.
         :return: A tuple expressing the available stones left after finishing
         the move and the current pit. If the last stone landed on an empty pit
         then the available stones is set to -1
         """
-        raise NotImplementedError
+        ...
 
+    @abstractmethod
     def add_stones(self, stones: int) -> int:
         """
         Increment the current pits with the number of stones.
@@ -37,16 +47,18 @@ class Player(ABC):
         :return: Remaining stones after a pass of increments.
         If the last stone landed on an empty pit then return -1
         """
-        raise NotImplementedError
+        ...
 
+    @abstractmethod
     def collect_all_stones(self):
         """
         Gather all the stones from all the pits and
         add them to the big pit.
         :return: None
         """
-        raise NotImplementedError
+        ...
 
+    @abstractmethod
     def steal_from(self, other_player, pit):
         """
         Steal the stones from the other player's opposite pit.
@@ -54,7 +66,7 @@ class Player(ABC):
         :param pit: Pit index of current player
         :return: None
         """
-        raise NotImplementedError
+        ...
 
     def reset(self):
         """
@@ -62,50 +74,3 @@ class Player(ABC):
         :return: None
         """
         self.__init__()
-
-
-class HumanPlayer(Player):
-    """
-    Implementation of the Player class for a player that chooses
-    the pits by clicking on them in the web interface.
-    """
-
-    def move(self, pit: int) -> (int, int):
-        assert self.pits[pit] > 0, "Cannot move from an empty pit"
-        available_stones = self.pits[pit]
-        self.pits[pit] = 0
-        if pit == NUMBER_OF_PITS - 1:
-            return available_stones, NUMBER_OF_PITS - 1
-        pit += 1
-        current_pit = pit
-        for i in range(pit, min(NUMBER_OF_PITS, pit + available_stones)):
-            logging.info(f"Adding stone to pit {i}. Available stones: {available_stones}")
-            self.pits[i] += 1
-            available_stones -= 1
-            current_pit = i
-            if self.pits[i] == 1 and available_stones == 0:
-                return HAVE_TO_STEAL, current_pit  # Landed on empty pit with last stone
-        return available_stones, current_pit
-
-    def add_stones(self, stones: int) -> int:
-        assert stones > 0, "Cannot add not-positive number of stones!"
-        current_pit = 0
-        for i in range(0, min(NUMBER_OF_PITS, stones)):
-            self.pits[i] += 1
-            stones -= 1
-            current_pit = i
-        if self.pits[current_pit] == 1 and stones == 0:
-            return HAVE_TO_STEAL
-        return stones
-
-    def collect_all_stones(self) -> None:
-        logging.info("Collect all stones in the big pit")
-        self.big_pit += sum(self.pits)
-        self.pits = [0] * NUMBER_OF_PITS
-
-    def steal_from(self, other_player, pit) -> None:
-        logging.info(f"Stealing stones from pit {pit}")
-        stones_to_steal = other_player.pits[NUMBER_OF_PITS - 1 - pit]
-        other_player.pits[NUMBER_OF_PITS - 1 - pit] = 0
-        self.pits[pit] = 0
-        self.big_pit += stones_to_steal + 1

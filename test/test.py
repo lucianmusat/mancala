@@ -1,7 +1,7 @@
 import pytest
 
 from game import Game
-from player import HumanPlayer
+from human_player import HumanPlayer
 
 
 class TestGame:
@@ -17,7 +17,8 @@ class TestGame:
 
     def test_game_basic_move(self, basic_setup):
         game, players = basic_setup
-        assert players[0].move(0) == (1, 5)
+        players[0].select_pit(0)
+        assert players[0].move() == (1, 5)
         assert players[0].pits == [0, 7, 7, 7, 7, 7]
         assert players[0].big_pit == 0
         assert players[1].pits == [6, 6, 6, 6, 6, 6]
@@ -25,7 +26,8 @@ class TestGame:
 
     def test_game_move_last(self, basic_setup):
         game, players = basic_setup
-        assert players[0].move(5) == (6, 5)
+        players[0].select_pit(5)
+        assert players[0].move() == (6, 5)
         assert players[0].pits == [6, 6, 6, 6, 6, 0]
         assert players[0].big_pit == 0
         assert players[1].pits == [6, 6, 6, 6, 6, 6]
@@ -126,15 +128,18 @@ class TestGame:
         game, players = basic_setup
         assert game.players[0].big_pit == game.players[1].big_pit == 0
         assert game.players[0].pits == game.players[0].pits == [6, 6, 6, 6, 6, 6]
-        assert players[0].move(0) == (1, 5)
+        players[0].select_pit(0)
+        assert players[0].move() == (1, 5)
         assert players[0].pits == [0, 7, 7, 7, 7, 7]
 
     def test_player_move_twice(self, basic_setup):
         game, players = basic_setup
-        assert players[0].move(5) == (6, 5)
+        players[0].select_pit(5)
+        assert players[0].move() == (6, 5)
         assert players[0].pits == [6, 6, 6, 6, 6, 0]
         game.players[0].pits = [6, 2, 6, 6, 6, 0]
-        assert players[0].move(1) == (0, 3)
+        players[0].select_pit(1)
+        assert players[0].move() == (0, 3)
         assert players[0].pits == [6, 0, 7, 7, 6, 0]
 
     def test_player_add_negative_stones(self, basic_setup):

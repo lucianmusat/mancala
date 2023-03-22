@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, status, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from player import HumanPlayer
+from human_player import HumanPlayer
 from game import Game
 
 NO_WINNER = -1
