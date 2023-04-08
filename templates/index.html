@@ -24,7 +24,7 @@
         <br />
         <div id="p1-pits" class="{{ 'selected-pits' if turn == 0 }}">
           {% for pit in players[0].pits %}
-          <a href="/select?pit={{ loop.index0 }}"><div class="pit" style="background-image: url({{ url_for('static', path='/' + pebbles[pit] if pit <= 6 else 'multiple_stones.png') }}); background-repeat: no-repeat;"> {{ pit }} </div></a>
+          {% if turn == 0 %}<a href="/select?userid=0&pit={{ loop.index0 }}">{% endif %} <div class="pit" style="background-image: url({{ url_for('static', path='/' + pebbles[pit] if pit <= 6 else 'multiple_stones.png') }}); background-repeat: no-repeat;"> {{ pit }} </div>{% if turn == 0 %}</a>{% endif %}
           {% endfor %}
         </div>
       </div>
@@ -47,6 +47,16 @@
 
     <a href="/reset"><div id="reset-button">Start again</div></a>
   </div>
+
+  {% if turn == 2 %} <!-- because turn is incremented before this check -->
+  <script>
+    async function ai_move() {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      window.location.href = "/select?pit=0&userid=1";
+    }
+    ai_move();
+  </script>
+  {% endif %}
 
 </body>
 </html>
