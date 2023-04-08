@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 STARTING_STONES = 6
 NUMBER_OF_PITS = 6
 HAVE_TO_STEAL = -1
+NO_WINNER = -1
+INVALID_CHOICE = -2
 
 
 class IPlayer(ABC):

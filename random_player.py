@@ -1,26 +1,33 @@
 import os
 import logging
+import random
 
-from player import IPlayer, NUMBER_OF_PITS, HAVE_TO_STEAL, INVALID_CHOICE
+from player import IPlayer, NUMBER_OF_PITS, HAVE_TO_STEAL
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "WARNING"))
 
 
-class HumanPlayer(IPlayer):
+class RandomPlayer(IPlayer):
     """
     Implementation of the Player class for a player that chooses
-    the pits by clicking on them in the web interface.
+    the pits at random, with no strategy.
     """
 
     def select_pit(self, pit: int):
-        self.selected_pit = pit
+        pass
+
+    def select_random_valid_pit(self):
+        valid_pit_indexes = []
+        for index, pit in enumerate(self.pits):
+            if pit > 0:
+                valid_pit_indexes.append(index)
+        return random.choice(valid_pit_indexes)
 
     def move(self) -> (int, int):
-        assert self.selected_pit is not None, "No pit selected!"
-        pit = self.selected_pit
+        logging.info("Random player making a move")
+        pit = self.select_random_valid_pit()
         self.selected_pit = None
-        if self.pits[pit] <= 0:
-            return INVALID_CHOICE, pit
+        assert self.pits[pit] > 0, "Cannot move from an empty pit"
         available_stones = self.pits[pit]
         self.pits[pit] = 0
         if pit == NUMBER_OF_PITS - 1:

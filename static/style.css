@@ -97,8 +97,8 @@
 
 .selected-pits {
     border-radius: 30px;
-    box-shadow:
-    0 0 20px -8px #fcf6f0;
+    border-style: solid;
+    border-color: #942b23;
 }
 
 .pit {

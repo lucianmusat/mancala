@@ -18,13 +18,13 @@
       <div id="pits-container">
         <div id="p2-pits" class="{{ 'selected-pits' if turn == 1 }}">
           {% for pit in players[1].pits|reverse %}
-          <a href="/select?user_id=1&pit={{ players[1].pits|length - loop.index0 - 1}}"><div class="pit" style="background-image: url({{ url_for('static', path='/' + pebbles[pit] if pit <= 6 else 'multiple_stones.png') }}); background-repeat: no-repeat;"> {{ pit }} </div></a>
+         <div class="pit" style="background-image: url({{ url_for('static', path='/' + pebbles[pit] if pit <= 6 else 'multiple_stones.png') }}); background-repeat: no-repeat;"> {{ pit }} </div>
           {% endfor %}
         </div>
         <br />
         <div id="p1-pits" class="{{ 'selected-pits' if turn == 0 }}">
           {% for pit in players[0].pits %}
-          <a href="/select?user_id=0&pit={{ loop.index0 }}"><div class="pit" style="background-image: url({{ url_for('static', path='/' + pebbles[pit] if pit <= 6 else 'multiple_stones.png') }}); background-repeat: no-repeat;"> {{ pit }} </div></a>
+          <a href="/select?pit={{ loop.index0 }}"><div class="pit" style="background-image: url({{ url_for('static', path='/' + pebbles[pit] if pit <= 6 else 'multiple_stones.png') }}); background-repeat: no-repeat;"> {{ pit }} </div></a>
           {% endfor %}
         </div>
       </div>
@@ -47,5 +47,7 @@
 
     <a href="/reset"><div id="reset-button">Start again</div></a>
   </div>
+
 </body>
 </html>
+
