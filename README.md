@@ -20,3 +20,8 @@ opposite pit (the other player’s pit) and puts them in his own (big or little?
 The game is over as soon as one of the sides runs out of stones. The player who
 still has stones in his pits keeps them and puts them in his big pit. The winner of
 the game is the player who has the most stones in his big pit.
+
+### TODO:
+ - [  ] Add a way to maintain state for each session
+ - [  ] Implement an AI Player based on minimax algorithm
+ - [  ] Cleanup the Player classes
