@@ -11,27 +11,27 @@
     <div id="main-board">
 
       <div id="p2-big-pit" class="big-pit">
-        <div class="big-pit-value">{{ players[1].big_pit }}</div>
+        <div class="big-pit-value">{{ board.players_data[1].big_pit }}</div>
         <div id="p2-pit-name">Player 2</div>
       </div>
 
       <div id="pits-container">
         <div id="p2-pits" class="{{ 'selected-pits' if turn == 1 }}">
-          {% for pit in players[1].pits|reverse %}
-         <div class="pit" style="background-image: url({{ url_for('static', path='/' + pebbles[pit] if pit <= 6 else 'multiple_stones.png') }}); background-repeat: no-repeat;"> {{ pit }} </div>
+          {% for pit in board.players_data[1].pits|reverse %}
+          {% if turn == 1 and pit > 0 %}<a href="/select?userid=1&pit={{ board.players_data[1].pits|length - loop.index0 - 1 }}">{% endif %} <div class="pit" style="background-image: url({{ url_for('static', path='/' + pebbles[pit] if pit <= 6 else 'multiple_stones.png') }}); background-repeat: no-repeat;"> {{ pit }} </div>{% if turn == 1 %}</a>{% endif %}
           {% endfor %}
         </div>
         <br />
         <div id="p1-pits" class="{{ 'selected-pits' if turn == 0 }}">
-          {% for pit in players[0].pits %}
-          {% if turn == 0 %}<a href="/select?userid=0&pit={{ loop.index0 }}">{% endif %} <div class="pit" style="background-image: url({{ url_for('static', path='/' + pebbles[pit] if pit <= 6 else 'multiple_stones.png') }}); background-repeat: no-repeat;"> {{ pit }} </div>{% if turn == 0 %}</a>{% endif %}
+          {% for pit in board.players_data[0].pits %}
+          {% if turn == 0 and pit > 0 %}<a href="/select?userid=0&pit={{ loop.index0 }}">{% endif %} <div class="pit" style="background-image: url({{ url_for('static', path='/' + pebbles[pit] if pit <= 6 else 'multiple_stones.png') }}); background-repeat: no-repeat;"> {{ pit }} </div>{% if turn == 0 %}</a>{% endif %}
           {% endfor %}
         </div>
       </div>
 
       <div id="p1-big-pit" class="big-pit">
         <div id="p1-pit-name">Player 1</div>
-        <div class="big-pit-value">{{ players[0].big_pit }}</div>
+        <div class="big-pit-value">{{ board.players_data[0].big_pit }}</div>
       </div>
 
     </div>
@@ -48,7 +48,7 @@
     <a href="/reset"><div id="reset-button">Start again</div></a>
   </div>
 
-  {% if turn == 2 %} <!-- because turn is incremented before this check -->
+  {% if turn == 2 and ai %} <!-- because turn is incremented before this check -->
   <script>
     async function ai_move() {
       await new Promise(resolve => setTimeout(resolve, 1000));
