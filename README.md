@@ -23,5 +23,5 @@ the game is the player who has the most stones in his big pit.
 
 ### TODO:
  - [  ] Add a way to maintain state for each session
- - [  ] Implement an AI Player based on minimax algorithm
- - [  ] Cleanup the Player classes
+ - [  ] Add client side rendering
+ - [  ] Add a drop-down menu to chose from easy/hard AI opponents

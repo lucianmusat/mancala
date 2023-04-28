@@ -23,6 +23,7 @@ class HumanPlayer(IPlayer):
         self.selected_pit = pit
 
     def move(self) -> bool:
+        logging.info("Human player making a move")
         assert self.selected_pit is not None, "No pit selected!"
         return self.board.move(self.index, self.selected_pit)
 

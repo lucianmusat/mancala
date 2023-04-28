@@ -50,32 +50,49 @@ class Board:
             return False
         available_stones = self.players_data[player].pits[pit]
         original_player = player
-        max_pit_index = NUMBER_OF_PITS - 1
         self.players_data[player].pits[pit] = 0
         while available_stones > 0:
-            if pit < max_pit_index:
+            if pit < NUMBER_OF_PITS - 1:
                 pit += 1
                 available_stones = self.add_stone(player, pit, available_stones)
                 logging.debug(f"Adding stone to pit {pit}. Available stones: {available_stones}")
-                logging.debug(f"player's current pits: {self.players_data[player].pits}")
                 # Landed on own empty pit with last stone, steal the stones from the opposite player's pit
-                if self.players_data[player].pits[pit] == 1 and available_stones == 0 and original_player == player:
-                    logging.debug(f"Player {player} landed on empty pit {pit}")
+                if self.players_data[player].pits[pit] == 1 and available_stones == 0 and player == original_player:
                     self.steal_stones(player, pit)
-            if pit == max_pit_index and available_stones > 0:
+            if self.reached_end(pit, available_stones):
                 pit = -1
-                # Landed on own big pit
-                if original_player == player:
-                    logging.debug(f"Player {player} landed on big pit")
-                    self.players_data[player].big_pit += 1
-                    available_stones -= 1
-                # Landed on own big pit with the last stone. We can go again
-                if available_stones == 0:
-                    return False
-                else:
+                available_stones = self.landed_on_own_big_pit(player, available_stones, player == original_player)
+                if available_stones != 0:
                     logging.debug(f"Player {player} continues in opponent's pits")
-                    player = 1 - player
+                    player = self.switch_player(player)
+                else:
+                    # Landed on own big pit with the last stone. We can go again
+                    return False
         return True
+
+    @staticmethod
+    def reached_end(pit: int, available_stones: int) -> bool:
+        """
+        Checks if the end of the pits has been reached.
+        """
+        return pit == NUMBER_OF_PITS - 1 and available_stones > 0
+
+    def landed_on_own_big_pit(self, player: int, available_stones: int, own_pit: bool) -> int:
+        """
+        Adds a stone to the player's big pit and returns the number of remaining stones.
+        """
+
+        if own_pit:
+            self.players_data[player].big_pit += 1
+            available_stones -= 1
+        return available_stones
+
+    @staticmethod
+    def switch_player(player: int) -> int:
+        """
+        Switches the player to the opponent.
+        """
+        return 1 - player
 
     def opponent(self, player):
         """
@@ -113,7 +130,8 @@ class Board:
                 all_stones_on_board += pit
 
         assert all_stones_on_board == self.nr_players * NUMBER_OF_PITS * STARTING_STONES, \
-            f"There was a problem in the stone moves! {self.nr_players * NUMBER_OF_PITS * STARTING_STONES} expected stones on the board," \
+            f"There was a problem in the stone moves! {self.nr_players * NUMBER_OF_PITS * STARTING_STONES} " \
+            f"expected stones on the board," \
             f" {all_stones_on_board} stones on board. Player1 pits: " \
             f"{self.players_data[0].pits} Player2 pits: {self.players_data[1].pits} Player1 big pit: " \
             f"{self.players_data[0].big_pit} Player2 big pit: {self.players_data[1].big_pit}"
@@ -124,11 +142,34 @@ class Board:
             return max(range(self.nr_players), key=lambda i: self.players_data[i].big_pit)
         return NO_WINNER
 
+    def game_over(self) -> bool:
+        """
+        Checks if the game is over.
+        """
+        return self.winner != NO_WINNER
+
     def any_player_finished(self):
+        """
+        Checks if any player has finished the game.
+        """
         for player_index in range(self.nr_players):
             if all(stones == 0 for stones in self.players_data[player_index].pits):
                 return True
         return False
+
+    def evaluate(self, player_index: int):
+        """
+        Evaluates the board for the given player.
+        Here we need to evaluate the state of the board and make a
+        judgement of how good it is for the player
+        :param player_index: the index of the player for which we evaluate the board
+        """
+        # simple algorithm, who has more points in the end
+        logging.debug(f"Evaluate time, player has {self.players_data[player_index].big_pit} stones in big pit "
+                      f"{self.players_data[player_index].pits} and opponent has "
+                      f"{self.players_data[1- player_index].big_pit} stones in big pit "
+                      f"{self.players_data[1 - player_index].big_pit}")
+        return self.players_data[player_index].big_pit - self.players_data[1 - player_index].big_pit
 
     def reset(self):
         """
@@ -141,6 +182,7 @@ class Board:
     def valid_pit_indexes(self, player: int) -> List[int]:
         """
         Returns a list of valid pit indexes for the given player.
+        :param player: The player for which the list of valid pit indexes is returned.
         """
         return [i for i, stones in enumerate(self.players_data[player].pits) if stones > 0]
 
@@ -173,3 +215,9 @@ class Board:
         self.players_data[player].pits[pit] += 1
         available_stones -= 1
         return available_stones
+
+    def __str__(self) -> str:
+        str_rep = ""
+        for index, player in enumerate(self.players_data):
+            str_rep += f"Player {index} has {player.big_pit} stones in big pit and {player.pits} stones in pits"
+        return str_rep

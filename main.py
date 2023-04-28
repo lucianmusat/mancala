@@ -3,7 +3,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from human_player import HumanPlayer
-from random_player import RandomPlayer
+# from random_player import RandomPlayer
+from minimax_player import MiniMaxPlayer
 from board import Board, NO_WINNER
 
 app = FastAPI(
@@ -27,7 +28,7 @@ app.pebbles = {
 app.board = Board(nr_players=2)
 app.players = {
     0: HumanPlayer(0, app.board),
-    1: RandomPlayer(1, app.board)
+    1: MiniMaxPlayer(1, app.board)
 }
 app.turn = 0
 app.winner = NO_WINNER
