@@ -18,13 +18,13 @@
       <div id="pits-container">
         <div id="p2-pits" class="{{ 'selected-pits' if turn == 1 }}">
           {% for pit in board.players_data[1].pits|reverse %}
-          {% if turn == 1 and pit > 0 %}<a href="/select?userid=1&pit={{ board.players_data[1].pits|length - loop.index0 - 1 }}">{% endif %} <div class="pit" style="background-image: url({{ url_for('static', path='/' + pebbles[pit] if pit <= 6 else 'multiple_stones.png') }}); background-repeat: no-repeat;"> {{ pit }} </div>{% if turn == 1 %}</a>{% endif %}
+          {% if turn == 1 and pit > 0 %}<a href="/select?userid=1&pit={{ board.players_data[1].pits|length - loop.index0 - 1 }}&session={{ session_id }}">{% endif %} <div class="pit" style="background-image: url({{ url_for('static', path='/' + pebbles[pit] if pit <= 6 else 'multiple_stones.png') }}); background-repeat: no-repeat;"> {{ pit }} </div>{% if turn == 1 %}</a>{% endif %}
           {% endfor %}
         </div>
         <br />
         <div id="p1-pits" class="{{ 'selected-pits' if turn == 0 }}">
           {% for pit in board.players_data[0].pits %}
-          {% if turn == 0 and pit > 0 %}<a href="/select?userid=0&pit={{ loop.index0 }}">{% endif %} <div class="pit" style="background-image: url({{ url_for('static', path='/' + pebbles[pit] if pit <= 6 else 'multiple_stones.png') }}); background-repeat: no-repeat;"> {{ pit }} </div>{% if turn == 0 %}</a>{% endif %}
+          {% if turn == 0 and pit > 0 %}<a href="/select?userid=0&pit={{ loop.index0 }}&session={{ session_id }}">{% endif %} <div class="pit" style="background-image: url({{ url_for('static', path='/' + pebbles[pit] if pit <= 6 else 'multiple_stones.png') }}); background-repeat: no-repeat;"> {{ pit }} </div>{% if turn == 0 %}</a>{% endif %}
           {% endfor %}
         </div>
       </div>
@@ -52,7 +52,7 @@
   <script>
     async function ai_move() {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      window.location.href = "/select?pit=0&userid=1";
+      window.location.href = "/select?userid=1&pit=0&session={{ session_id }}";
     }
     ai_move();
   </script>

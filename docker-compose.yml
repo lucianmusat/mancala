@@ -4,3 +4,16 @@ services:
     build: .
     ports:
       - "8000:8000"
+  cache:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+# --save in care we want to persist data to disk
+#    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+    command: redis-server --loglevel warning
+#    volumes:
+#      - cache:/data
+#volumes:
+#  cache:
+#    driver: local
