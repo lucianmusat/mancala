@@ -11,10 +11,11 @@ from human_player import HumanPlayer
 from minimax_player import MiniMaxPlayer
 from board import Board, NO_WINNER
 
+REDIS_HOST = 'redis'
 REDIS_PORT = 6379
 
 redis = redis.Redis(
-    host='localhost',
+    host=REDIS_HOST,
     port=REDIS_PORT)
 assert redis.ping()
 

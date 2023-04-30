@@ -6,6 +6,7 @@ services:
       - "8000:8000"
   cache:
     image: redis:6.2-alpine
+    hostname: redis
     restart: always
     ports:
       - '6379:6379'
