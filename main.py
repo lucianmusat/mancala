@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request, status, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from datetime import timedelta
 from uuid import uuid4
 import redis
 import pickle
@@ -13,6 +14,7 @@ from board import Board, NO_WINNER
 
 REDIS_HOST = 'redis'
 REDIS_PORT = 6379
+REDIS_EXPIRATION_HOURS = 72
 
 redis = redis.Redis(
     host=REDIS_HOST,
@@ -99,7 +101,7 @@ def index(request: Request):
     :return: TemplateResponse that will render the landing page
     """
     session_id = str(uuid4())
-    redis.set(session_id, pickle.dumps(default_session_state()))
+    redis.setex(session_id, timedelta(hours=REDIS_EXPIRATION_HOURS), pickle.dumps(default_session_state()))
     return populate_board(request, session_id)
 
 
@@ -125,20 +127,20 @@ def pit_selected(request: Request,
         if session_state['players'][userid].move():
             session_state['turn'] += 1
         session_state['winner'] = session_state['board'].winner
-    redis.set(session, pickle.dumps(session_state))
+    redis.setex(session, timedelta(hours=REDIS_EXPIRATION_HOURS), pickle.dumps(session_state))
     return populate_board(request, session)
 
 
 @app.get("/reset")
-def reset(request: Request):
+def reset(request: Request, session: str = Query(default="")):
     """
     Reset the game to it's initial state.
     :param request: Current request context
+    :param session: Session id to use
     :return: TemplateResponse that will render the freshly reset board
     """
-    session_id = str(uuid4())
-    redis.set(session_id, pickle.dumps(default_session_state()))
-    return populate_board(request, session_id)
+    redis.setex(session, timedelta(hours=REDIS_EXPIRATION_HOURS), pickle.dumps(default_session_state()))
+    return populate_board(request, session)
 
 
 @app.exception_handler(status.HTTP_404_NOT_FOUND)

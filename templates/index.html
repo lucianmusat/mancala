@@ -45,7 +45,7 @@
     {% endif %}
     <br />
 
-    <a href="/reset"><div id="reset-button">Start again</div></a>
+    <a href="/reset?session={{ session_id }}"><div id="reset-button">Start again</div></a>
   </div>
 
   {% if turn == 2 and ai %} <!-- because turn is incremented before this check -->
