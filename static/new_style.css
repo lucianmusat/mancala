@@ -1,0 +1,245 @@
+.background {
+    background-color: #3c1725;
+}
+
+#container {
+    width: 100%;
+    margin: auto;
+    /* padding: 20px; */
+    overflow: hidden;
+    text-align: center;
+}
+
+#top-menu {
+    border-radius: 25px;
+    height: 100px;
+    width: 100%;
+    text-align: left;
+    margin-top: 50px;
+    margin-bottom: 20px;
+    margin-left: 50px;
+    background-color: #FDFEFF;
+    /* box-shadow: 10px 5px 10px #7C636E; */
+    filter: drop-shadow(5px 5px 100px #7C636E);
+}
+
+.top-button {
+    float: left;
+    margin-left: 50px;
+    text-align: center;
+    line-height: 100px;
+    font-size: 42px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    color: #231E1F;
+}
+
+.top-button:hover {
+    color: #7C636E;
+}
+
+.arrow {
+    border: solid black;
+    border-width: 0 3px 3px 0;
+    padding: 3px;
+    float: right;
+    margin-top: 8px;
+  }
+
+  .down {
+    transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+  }
+
+.top-dropdown {
+    float: right;
+    margin-right: 50px;
+    margin-top: 25px;
+    height: 100px;
+    width: 200px;
+    border-radius: 25px;
+}
+
+/* Style the button that opens the dropdown */
+.dropdown-button {
+    background-color: white;
+    color: black;
+    border: 2px solid lightgray;
+    font-size: 24px;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 10px;
+    width: 120px;
+    text-align: left;
+  }
+
+/* Style the dropdown menu */
+.dropdown-menu {
+    top: 100%;
+    left: 0;
+    padding: 0;
+    margin: 0;
+    background-color: white;
+    border: 1px solid lightgray;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    list-style: none;
+    display: none;
+}
+
+/* Style the dropdown menu items */
+.dropdown-menu li {
+    padding: 10px;
+}
+
+.dropdown-menu li a {
+    color: black;
+    text-decoration: none;
+}
+
+.dropdown-menu li:hover {
+    background-color: #f1f1f1;
+}
+
+@font-face {
+    font-family: 'dk_jambo-regular';
+    src: url('dk_jambo.otf') format('truetype');
+  }
+
+.main-title {
+    text-align: center;
+    font-size: 128px;
+    font-family: 'dk_jambo-regular', sans-serif;
+    font-weight: bold;
+    color: #FDFEFF;
+    text-shadow: 3px 3px 5px #000;
+}
+
+#main-board {
+    height: 400px;
+    width: 1100px;
+    display: inline-block;
+    margin: auto 5px;
+    background-image: url('board.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    padding-left: 50px;
+}
+
+#status {
+    border-radius: 25px;
+    height: 100px;
+    width: 400px;
+    margin-top: 50px;
+    margin-bottom: 20px;
+    background-color: #fcf3dc;
+    box-shadow: 10px 5px 10px #8c6954;
+    text-align: center;
+    line-height: 100px;
+    font-size: 42px;
+    font-family: Arial, Helvetica, sans-serif;
+    display: inline-block;
+}
+
+.p2-big-pit {
+    height: 170px;
+    width: 70px;
+    float:left;
+    margin-left: 30px;
+    margin-top: 190px;
+}
+
+.p1-big-pit {
+    height: 170px;
+    width: 70px;
+    float:left;
+    margin-left: 5px;
+    margin-top: 90px;
+}
+
+#p1-pit-name {
+    color: white;
+    text-align: center;
+    margin-bottom: 80px;
+}
+
+#p2-pit-name {
+    color: white;
+    text-align: center;
+    margin-top: 80px;
+}
+
+.big-pit-value {
+    color: white;
+    text-align: center;
+    font-size: 24px;
+}
+
+#p2-pits {
+    height: 130px;
+    overflow: hidden;
+    margin-right: 20px;
+    margin-bottom: 20px;
+    float: left;
+}
+
+#p1-pits {
+    height: 130px;
+    overflow: hidden;
+    margin-top: 20px;
+    margin-right: 20px;
+    float: left;
+}
+
+.selected-pits {
+    border-radius: 30px;
+    border-style: solid;
+    border-color: #942b23;
+}
+
+#pits-container {
+    height: 360px;
+    overflow: auto;
+    margin-top: 60px;
+    margin-left: 32px;
+    float: left;
+}
+
+.pit {
+    font-size: 16px;
+    color: white;
+    width: 50px;
+    height: 100px;
+    line-height: 180px;
+    float: left;
+    margin-top: 30px;
+    margin-left: 40px;
+    margin-right: 40px;
+}
+
+a {
+    text-decoration: none;
+    color: white;
+}
+
+.blinking {
+    animation: opacity 2s ease-in-out infinite;
+    opacity: 1;
+    margin: 0;
+}
+
+@keyframes opacity {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0
+  }
+
+  100% {
+    opacity: 1;
+  }
+}

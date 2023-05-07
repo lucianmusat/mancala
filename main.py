@@ -12,7 +12,7 @@ from human_player import HumanPlayer
 from minimax_player import MiniMaxPlayer
 from board import Board, NO_WINNER
 
-REDIS_HOST = 'redis'
+REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
 REDIS_EXPIRATION_HOURS = 72
 
@@ -82,7 +82,7 @@ def populate_board(request: Request, session_id: str) -> templates.TemplateRespo
         return templates.TemplateResponse("404.html", {
             "request": request
         })
-    return templates.TemplateResponse("index.html", {
+    return templates.TemplateResponse("new_index.html", {
         "request": request,
         "board": session_state['board'],
         "pebbles": app.pebbles,

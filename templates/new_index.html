@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Lucian's Mancala Game</title>
+  <link href="{{ url_for('static', path='/new_style.css') }}" rel="stylesheet">
+</head>
+
+<body class="background">
+    <div id="container">
+        <div id="top-menu">
+            <a href="#"><div class="top-button">Home</div></a>
+            <a href="/reset?session={{ session_id }}"><div class="top-button">Reset</div></a>
+            <a href="/about"><div class="top-button">About</div></a>
+            <div class="top-dropdown">
+                <button class="dropdown-button">Easy<span class="arrow down"></span></button>
+                <ul class="dropdown-menu">
+                <li><a href="#">Easy</i></a></li>
+                <li><a href="#">Hard</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="main-title">Mancala</div>
+
+        <div id="main-board">
+
+            <div id="p2-big-pit" class="p2-big-pit">
+            <div class="big-pit-value">{{ board.players_data[1].big_pit }}</div>
+            <div id="p2-pit-name">Player 2</div>
+            </div>
+
+            <div id="pits-container">
+                <div id="p2-pits" class="{{ 'selected-pits' if turn == 1 }}">
+                    {% for pit in board.players_data[1].pits|reverse %}
+                    {% if turn == 1 and pit > 0 and not ai %}<a href="/select?userid=1&pit={{ board.players_data[1].pits|length - loop.index0 - 1 }}&session={{ session_id }}">{% endif %} <div class="pit" style="background-image: url({{ url_for('static', path='/' + pebbles[pit] if pit <= 6 else 'multiple_stones.png') }}); background-repeat: no-repeat;"> {{ pit }} </div>{% if turn == 1 %}</a>{% endif %}
+                    {% endfor %}
+                </div>
+                <br />
+                <div id="p1-pits" class="{{ 'selected-pits' if turn == 0 }}">
+                    {% for pit in board.players_data[0].pits %}
+                    {% if turn == 0 and pit > 0 %}<a href="/select?userid=0&pit={{ loop.index0 }}&session={{ session_id }}">{% endif %} <div class="pit" style="background-image: url({{ url_for('static', path='/' + pebbles[pit] if pit <= 6 else 'multiple_stones.png') }}); background-repeat: no-repeat;"> {{ pit }} </div>{% if turn == 0 %}</a>{% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div id="p1-big-pit" class="p1-big-pit">
+            <div id="p1-pit-name">Player 1</div>
+            <div class="big-pit-value">{{ board.players_data[0].big_pit }}</div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <script>
+        // Get the dropdown button and menu
+        var button = document.querySelector('.dropdown-button');
+        var menu = document.querySelector('.dropdown-menu');
+
+        // Add a click event listener to the button
+        button.addEventListener('click', function() {
+        // Toggle the visibility of the menu
+        if (menu.style.display === 'none') {
+            menu.style.display = 'block';
+        } else {
+            menu.style.display = 'none';
+        }
+        });
+
+        // Add a click event listener to the menu
+        menu.addEventListener('click', function(e) {
+        // If the clicked element is an anchor tag
+        if (e.target.tagName === 'A') {
+            // Prevent the default link behavior
+            e.preventDefault();
+            // Update the button text with the selected option
+            button.textContent = e.target.textContent;
+            menu.style.display = 'none';
+        }
+        });
+
+        // AI script
+        async function ai_move() {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            window.location.href = "/select?userid=1&pit=0&session={{ session_id }}";
+        }
+        {% if turn == 1 and ai %} ai_move(); {% endif %}
+    </script>
+
+
+
+</body>
+</html>
