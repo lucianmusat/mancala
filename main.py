@@ -14,7 +14,7 @@ from random_player import RandomPlayer
 from minimax_player import MiniMaxPlayer
 from board import Board, NO_WINNER
 
-REDIS_HOST = 'localhost'
+REDIS_HOST = 'redis'
 REDIS_PORT = 6379
 REDIS_EXPIRATION_HOURS = 72
 
