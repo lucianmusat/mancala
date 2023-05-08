@@ -22,5 +22,4 @@ still has stones in his pits keeps them and puts them in his big pit. The winner
 the game is the player who has the most stones in his big pit.
 
 ### TODO:
- - [  ] Add client side rendering
- - [  ] Add a drop-down menu to chose from easy/hard AI opponents
+ - [  ] Add client side rendering\
