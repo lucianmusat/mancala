@@ -9,13 +9,13 @@
 <body class="background">
     <div id="container">
         <div id="top-menu">
-            <a href="#"><div class="top-button">Home</div></a>
-            <a href="/reset?session={{ session_id }}"><div class="top-button">Reset</div></a>
-            <a href="/about"><div class="top-button">About</div></a>
+            <a href="/"><div class="top-button">Home</div></a>
+            <a href="/reset?session={{ session_id }}&difficulty={{ difficulty }}"><div class="top-button">Reset</div></a>
+            <a href="/"><div class="top-button">About</div></a>
             <div class="top-dropdown">
-                <button class="dropdown-button">Easy<span class="arrow down"></span></button>
+                <button class="dropdown-button">Easy</button>
                 <ul class="dropdown-menu">
-                <li><a href="#">Easy</i></a></li>
+                <li><a href="#">Easy</a></li>
                 <li><a href="#">Hard</a></li>
                 </ul>
             </div>
@@ -57,6 +57,19 @@
         // Get the dropdown button and menu
         var button = document.querySelector('.dropdown-button');
         var menu = document.querySelector('.dropdown-menu');
+        button.innerHTML = "{{ 'Easy' if difficulty == 0 else 'Hard' }} <span class='arrow down'></span>";
+
+        // Set the menu to be initially hidden
+        menu.style.display = 'none';
+
+        // Add a click event listener to the document
+        document.addEventListener('click', function(event) {
+            // Check if the clicked element is inside the dropdown menu or the dropdown button
+            if (!menu.contains(event.target) && !button.contains(event.target)) {
+                // Hide the dropdown menu if the clicked element is outside the menu and the button
+                menu.style.display = 'none';
+            }
+        });
 
         // Add a click event listener to the button
         button.addEventListener('click', function() {
@@ -74,9 +87,7 @@
         if (e.target.tagName === 'A') {
             // Prevent the default link behavior
             e.preventDefault();
-            // Update the button text with the selected option
-            button.textContent = e.target.textContent;
-            menu.style.display = 'none';
+            window.location.href = "/reset?session={{ session_id }}&difficulty={{ 1 - difficulty }}";
         }
         });
 
