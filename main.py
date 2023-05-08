@@ -86,7 +86,7 @@ def populate_board(request: Request, session_id: str) -> templates.TemplateRespo
         return templates.TemplateResponse("404.html", {
             "request": request
         })
-    return templates.TemplateResponse("new_index.html", {
+    return templates.TemplateResponse("index.html", {
         "request": request,
         "board": session_state['board'],
         "pebbles": app.pebbles,
@@ -150,11 +150,9 @@ def reset(request: Request, session: str = Query(default=""), difficulty: int = 
     new_session['difficulty'] = difficulty
     if difficulty == 0:
         logging.debug("Using AI easy")
-        print("Using AI easy")
         new_session['players'][1] = RandomPlayer(1, new_session['board'])
     else:
         logging.debug("Using AI hard")
-        print("Using AI hard")
         new_session['players'][1] = MiniMaxPlayer(1, new_session['board'])
     redis.setex(session, timedelta(hours=REDIS_EXPIRATION_HOURS), pickle.dumps(new_session))
     return populate_board(request, session)
