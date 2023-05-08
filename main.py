@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import FastAPI, Request, status, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -8,11 +10,11 @@ import redis
 import pickle
 
 from human_player import HumanPlayer
-# from random_player import RandomPlayer
+from random_player import RandomPlayer
 from minimax_player import MiniMaxPlayer
 from board import Board, NO_WINNER
 
-REDIS_HOST = 'redis'
+REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
 REDIS_EXPIRATION_HOURS = 72
 
@@ -46,6 +48,7 @@ app.players = {
 }
 app.turn = 0
 app.winner = NO_WINNER
+app.difficulty = 0
 
 
 def get_session_state(session_id: str) -> dict:
@@ -66,7 +69,8 @@ def default_session_state() -> dict:
     return {"board": app.board,
             "turn": app.turn,
             "winner": app.winner,
-            "players": app.players
+            "players": app.players,
+            "difficulty": 0,
             }
 
 
@@ -89,7 +93,8 @@ def populate_board(request: Request, session_id: str) -> templates.TemplateRespo
         "turn": session_state['turn'] % 2,
         "winner": session_state['winner'],
         "ai": not all(isinstance(player, HumanPlayer) for player in session_state['players'].values()),
-        "session_id": session_id
+        "session_id": session_id,
+        "difficulty": session_state['difficulty'],
     })
 
 
@@ -117,6 +122,7 @@ def pit_selected(request: Request,
     :param userid: Which user made the choice
     :param pit: Chosen pit index from the user's pit list
     :param session: Session id to use
+    :param difficulty: Difficulty level of the AI (0 easy, 1 hard)
     :return: TemplateResponse that will render the board with the new data
     """
     session_state = get_session_state(session)
@@ -132,14 +138,23 @@ def pit_selected(request: Request,
 
 
 @app.get("/reset")
-def reset(request: Request, session: str = Query(default="")):
+def reset(request: Request, session: str = Query(default=""), difficulty: int = Query(ge=0, le=1)):
     """
     Reset the game to it's initial state.
     :param request: Current request context
     :param session: Session id to use
+    :param difficulty: Difficulty level of the AI (0 easy, 1 hard)
     :return: TemplateResponse that will render the freshly reset board
     """
-    redis.setex(session, timedelta(hours=REDIS_EXPIRATION_HOURS), pickle.dumps(default_session_state()))
+    new_session = default_session_state()
+    new_session['difficulty'] = difficulty
+    if difficulty == 0:
+        logging.debug("Using AI easy")
+        new_session['players'][1] = RandomPlayer(1, new_session['board'])
+    else:
+        logging.debug("Using AI hard")
+        new_session['players'][1] = MiniMaxPlayer(1, new_session['board'])
+    redis.setex(session, timedelta(hours=REDIS_EXPIRATION_HOURS), pickle.dumps(new_session))
     return populate_board(request, session)
 
 

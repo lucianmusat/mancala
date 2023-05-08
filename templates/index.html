@@ -7,57 +7,103 @@
 </head>
 
 <body class="background">
-  <div id="container">
-    <div id="main-board">
+    <div id="container">
+        <div id="top-menu">
+            <a href="/"><div class="top-button">Home</div></a>
+            <a href="/reset?session={{ session_id }}&difficulty={{ difficulty }}"><div class="top-button">Reset</div></a>
+            <a href="/"><div class="top-button">About</div></a>
+            <div class="top-dropdown">
+                <button class="dropdown-button">Easy</button>
+                <ul class="dropdown-menu">
+                <li><a href="#">Easy</a></li>
+                <li><a href="#">Hard</a></li>
+                </ul>
+            </div>
+        </div>
 
-      <div id="p2-big-pit" class="big-pit">
-        <div class="big-pit-value">{{ board.players_data[1].big_pit }}</div>
-        <div id="p2-pit-name">Player 2</div>
-      </div>
+        <div class="main-title">Mancala</div>
 
-      <div id="pits-container">
-        <div id="p2-pits" class="{{ 'selected-pits' if turn == 1 }}">
-          {% for pit in board.players_data[1].pits|reverse %}
-          {% if turn == 1 and pit > 0 %}<a href="/select?userid=1&pit={{ board.players_data[1].pits|length - loop.index0 - 1 }}&session={{ session_id }}">{% endif %} <div class="pit" style="background-image: url({{ url_for('static', path='/' + pebbles[pit] if pit <= 6 else 'multiple_stones.png') }}); background-repeat: no-repeat;"> {{ pit }} </div>{% if turn == 1 %}</a>{% endif %}
-          {% endfor %}
+        <div id="main-board">
+
+            <div id="p2-big-pit" class="p2-big-pit">
+            <div class="big-pit-value {{ 'blinking selected-pits' if winner == 1 }}">{{ board.players_data[1].big_pit }}</div>
+            <div id="p2-pit-name">Player 2</div>
+            </div>
+
+            <div id="pits-container">
+                <div id="p2-pits" class="{{ 'selected-pits' if turn == 1 and winner < 0 }}">
+                    {% for pit in board.players_data[1].pits|reverse %}
+                    {% if turn == 1 and pit > 0 and not ai %}<a href="/select?userid=1&pit={{ board.players_data[1].pits|length - loop.index0 - 1 }}&session={{ session_id }}">{% endif %} <div class="pit" style="background-image: url({{ url_for('static', path='/' + pebbles[pit] if pit <= 6 else 'multiple_stones.png') }}); background-repeat: no-repeat;"> {{ pit }} </div>{% if turn == 1 %}</a>{% endif %}
+                    {% endfor %}
+                </div>
+                <br />
+                <div id="p1-pits" class="{{ 'selected-pits' if turn == 0 and winner < 0 }}">
+                    {% for pit in board.players_data[0].pits %}
+                    {% if turn == 0 and pit > 0 %}<a href="/select?userid=0&pit={{ loop.index0 }}&session={{ session_id }}">{% endif %} <div class="pit" style="background-image: url({{ url_for('static', path='/' + pebbles[pit] if pit <= 6 else 'multiple_stones.png') }}); background-repeat: no-repeat;"> {{ pit }} </div>{% if turn == 0 %}</a>{% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div id="p1-big-pit" class="p1-big-pit">
+            <div id="p1-pit-name">Player 1</div>
+            <div class="big-pit-value {{ 'blinking selected-pits' if winner == 0 }}">{{ board.players_data[0].big_pit }}</div>
+            </div>
+
         </div>
         <br />
-        <div id="p1-pits" class="{{ 'selected-pits' if turn == 0 }}">
-          {% for pit in board.players_data[0].pits %}
-          {% if turn == 0 and pit > 0 %}<a href="/select?userid=0&pit={{ loop.index0 }}&session={{ session_id }}">{% endif %} <div class="pit" style="background-image: url({{ url_for('static', path='/' + pebbles[pit] if pit <= 6 else 'multiple_stones.png') }}); background-repeat: no-repeat;"> {{ pit }} </div>{% if turn == 0 %}</a>{% endif %}
-          {% endfor %}
+        <div id="status">
+            {% if winner >= 0 %}<p class="neonText">Player {{ winner + 1 }} wins!</p>{% endif %}
         </div>
-      </div>
-
-      <div id="p1-big-pit" class="big-pit">
-        <div id="p1-pit-name">Player 1</div>
-        <div class="big-pit-value">{{ board.players_data[0].big_pit }}</div>
-      </div>
 
     </div>
-    <br />
 
-    {% if winner > -1 %}
-    <div id="status"><p class="blinking">Winner: Player {{ winner +1 }}</p></div>
-    {% else %}
-    {% set turn = turn + 1 %}
-    <div id="status">Turn: Player{{ turn }}</div>
-    {% endif %}
-    <br />
+    <script>
+        // Get the dropdown button and menu
+        var button = document.querySelector('.dropdown-button');
+        var menu = document.querySelector('.dropdown-menu');
+        button.innerHTML = "{{ 'Easy' if difficulty == 0 else 'Hard' }} <span class='arrow down'></span>";
 
-    <a href="/reset?session={{ session_id }}"><div id="reset-button">Start again</div></a>
-  </div>
+        // Set the menu to be initially hidden
+        menu.style.display = 'none';
 
-  {% if turn == 2 and ai %} <!-- because turn is incremented before this check -->
-  <script>
-    async function ai_move() {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      window.location.href = "/select?userid=1&pit=0&session={{ session_id }}";
-    }
-    ai_move();
-  </script>
-  {% endif %}
+        // Add a click event listener to the document
+        document.addEventListener('click', function(event) {
+            // Check if the clicked element is inside the dropdown menu or the dropdown button
+            if (!menu.contains(event.target) && !button.contains(event.target)) {
+                // Hide the dropdown menu if the clicked element is outside the menu and the button
+                menu.style.display = 'none';
+            }
+        });
+
+        // Add a click event listener to the button
+        button.addEventListener('click', function() {
+        // Toggle the visibility of the menu
+        if (menu.style.display === 'none') {
+            menu.style.display = 'block';
+        } else {
+            menu.style.display = 'none';
+        }
+        });
+
+        // Add a click event listener to the menu
+        menu.addEventListener('click', function(e) {
+        // If the clicked element is an anchor tag
+        if (e.target.tagName === 'A') {
+            // Prevent the default link behavior
+            e.preventDefault();
+            window.location.href = "/reset?session={{ session_id }}&difficulty={{ 1 - difficulty }}";
+        }
+        });
+
+        // AI script
+        async function ai_move() {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            window.location.href = "/select?userid=1&pit=0&session={{ session_id }}";
+        }
+        {% if turn == 1 and ai and winner < 0 %} ai_move(); {% endif %}
+    </script>
+
+
 
 </body>
 </html>
-
