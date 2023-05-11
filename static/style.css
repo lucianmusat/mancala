@@ -3,11 +3,9 @@
 }
 
 #container {
-    width: 100%;
-    margin: auto;
-    /* padding: 20px; */
     overflow: hidden;
     text-align: center;
+    position: relative;
 }
 
 #top-menu {
@@ -111,13 +109,15 @@
     src: url('dk_jambo.otf') format('truetype');
   }
 
-.main-title {
+#main-title {
+    display: inline-block;
     text-align: center;
     font-size: 128px;
     font-family: 'dk_jambo-regular', sans-serif;
     font-weight: bold;
     color: #FDFEFF;
     text-shadow: 3px 3px 5px #000;
+    margin-left: 200px; /* Size of the top right dropdown menu */
 }
 
 #main-board {
