@@ -14,7 +14,7 @@
     width: 100%;
     text-align: left;
     margin-top: 50px;
-    margin-bottom: 20px;
+    margin-bottom: 50px;
     margin-left: 50px;
     background-color: #FDFEFF;
     /* box-shadow: 10px 5px 10px #7C636E; */
@@ -117,7 +117,7 @@
     font-weight: bold;
     color: #FDFEFF;
     text-shadow: 3px 3px 5px #000;
-    margin-left: 200px; /* Size of the top right dropdown menu */
+    margin-bottom: 50px;
 }
 
 #main-board {
@@ -236,6 +236,10 @@
 a {
     text-decoration: none;
     color: white;
+}
+
+a:hover .pit {
+     filter: brightness(150%);
 }
 
 .blinking {
