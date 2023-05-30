@@ -13,8 +13,8 @@
     height: 100px;
     width: 100%;
     text-align: left;
-    margin-top: 50px;
-    margin-bottom: 50px;
+    margin-top: 20px;
+    margin-bottom: 20px;
     margin-left: 50px;
     background-color: #FDFEFF;
     /* box-shadow: 10px 5px 10px #7C636E; */
@@ -117,7 +117,7 @@
     font-weight: bold;
     color: #FDFEFF;
     text-shadow: 3px 3px 5px #000;
-    margin-bottom: 50px;
+    margin-left: 200px;
 }
 
 #main-board {
