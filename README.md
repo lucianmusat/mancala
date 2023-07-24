@@ -2,6 +2,8 @@
 
 Can be played online here: [lucianmusat.online](http://lucianmusat.online/)
 
+![How it looks](screenshot.png)
+
 ## Rules
 
 ### Gameplay
