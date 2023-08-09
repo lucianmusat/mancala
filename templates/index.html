@@ -93,14 +93,14 @@
         if (e.target.tagName === 'A') {
             // Prevent the default link behavior
             e.preventDefault();
-            window.location.href = "/reset?session={{ session_id }}&difficulty={{ 1 - difficulty }}";
+            window.location.href = "/mancala/reset?session={{ session_id }}&difficulty={{ 1 - difficulty }}";
         }
         });
 
         // AI script
         async function ai_move() {
             await new Promise(resolve => setTimeout(resolve, 1000));
-            window.location.href = "/select?userid=1&pit=0&session={{ session_id }}";
+            window.location.href = "/mancala/select?userid=1&pit=0&session={{ session_id }}";
         }
         {% if turn == 1 and ai and winner < 0 %} ai_move(); {% endif %}
     </script>

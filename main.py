@@ -17,6 +17,7 @@ from board import Board, NO_WINNER
 REDIS_HOST = 'redis'
 REDIS_PORT = 6379
 REDIS_EXPIRATION_HOURS = 72
+PREFIX = "/mancala"
 
 redis = redis.Redis(
     host=REDIS_HOST,
@@ -98,7 +99,7 @@ def populate_board(request: Request, session_id: str) -> templates.TemplateRespo
     })
 
 
-@app.get("/")
+@app.get(PREFIX)
 def index(request: Request):
     """
     Main index Api call. Generates a new session id.
@@ -110,7 +111,7 @@ def index(request: Request):
     return populate_board(request, session_id)
 
 
-@app.get("/select/")
+@app.get(f"{PREFIX}/select/")
 def pit_selected(request: Request,
                  userid: int = Query(ge=0, le=1),
                  pit: int = Query(ge=0, le=5),
@@ -137,7 +138,7 @@ def pit_selected(request: Request,
     return populate_board(request, session)
 
 
-@app.get("/reset")
+@app.get(f"{PREFIX}/reset")
 def reset(request: Request, session: str = Query(default=""), difficulty: int = Query(ge=0, le=1)):
     """
     Reset the game to it's initial state.

@@ -22,4 +22,5 @@ still has stones in his pits keeps them and puts them in his big pit. The winner
 the game is the player who has the most stones in his big pit.
 
 ### TODO:
+ - [  ] Add About page
  - [  ] Add client side rendering
