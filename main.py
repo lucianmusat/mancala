@@ -99,12 +99,15 @@ def populate_board(request: Request, session_id: str) -> templates.TemplateRespo
 
 
 @app.get("/")
-def index(request: Request):
+def index(request: Request, session: str = Query(default="")):
     """
     Main index Api call. Generates a new session id.
     :param request: Current request context
+    :param session: Session id to use in case of a continued game
     :return: TemplateResponse that will render the landing page
     """
+    if session:
+        return populate_board(request, session)
     session_id = str(uuid4())
     redis.setex(session_id, timedelta(hours=REDIS_EXPIRATION_HOURS), pickle.dumps(default_session_state()))
     return populate_board(request, session_id)
@@ -156,6 +159,15 @@ def reset(request: Request, session: str = Query(default=""), difficulty: int = 
         new_session['players'][1] = MiniMaxPlayer(1, new_session['board'])
     redis.setex(session, timedelta(hours=REDIS_EXPIRATION_HOURS), pickle.dumps(new_session))
     return populate_board(request, session)
+
+
+@app.get("/about")
+def index(request: Request, session: str = Query(default="")):
+    """
+    About page Api call.
+    :return: TemplateResponse that will render the about page
+    """
+    return templates.TemplateResponse("about.html", {"request": request, "session_id": session})
 
 
 @app.exception_handler(status.HTTP_404_NOT_FOUND)
