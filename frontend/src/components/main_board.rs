@@ -15,7 +15,7 @@ pub fn main_board() -> Html {
         <div id="main-board">
             <div id="pits-container">
                 <div id="p1-pits">
-                    { for pits.iter().enumerate().map(|(i, &pit)| html! {
+                    { for pits.iter().enumerate().map(|(_i, &pit)| html! {
                         <div class="pit" onclick={onclick.clone()}> { pit } </div>
                     })}
                 </div>
