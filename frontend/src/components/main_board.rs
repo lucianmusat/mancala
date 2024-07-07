@@ -40,12 +40,12 @@ struct GameData {
 pub fn main_board() -> Html {
     let pebbles: HashMap<i32, &str> = [
         (0, ""),
-        (1, "1stone.png"),
-        (2, "2stones.png"),
-        (3, "3stones.png"),
-        (4, "4stones.png"),
-        (5, "5stones.png"),
-        (6, "6stones.png"),
+        (1, "static/1stone.png"),
+        (2, "static/2stones.png"),
+        (3, "static/3stones.png"),
+        (4, "static/4stones.png"),
+        (5, "static/5stones.png"),
+        (6, "static/6stones.png"),
     ].iter().cloned().collect();
 
     let turn = use_state(|| 0);
@@ -95,14 +95,14 @@ pub fn main_board() -> Html {
                             let background_image = if *pit <= 6 {
                                                              format!("/{}", pebbles.get(pit).unwrap_or(&""))
                                                             } else {
-                                                                "/multiple_stones.png".to_string()
+                                                                "static/multiple_stones.png".to_string()
                                                             };
                             let style = format!("background-image: url({}); background-repeat: no-repeat;", background_image);
                             let request_url = format!("/select?userid=1&pit={}&session={}", pit_index, data.session_id);
                             html! {
                                 <>
                                     { if *turn == 1 && *pit > 0 && !*ai {
-                                        html! { <a href={ request_url }></a> }
+                                        html! { <a href={ request_url }> {"X"} </a> }
                                     } else { html! {} }}
                                     <div class="pit" style={ style }>
                                         { pit }
@@ -117,19 +117,14 @@ pub fn main_board() -> Html {
                             let background_image = if *pit <= 6 {
                                                              format!("/{}", pebbles.get(pit).unwrap_or(&""))
                                                             } else {
-                                                                "/multiple_stones.png".to_string()
+                                                                "static/multiple_stones.png".to_string()
                                                             };
                             let style = format!("background-image: url({}); background-repeat: no-repeat;", background_image);
                             let request_url = format!("/select?userid=1&pit={}&session={}", index, data.session_id);
                             html! {
-                                <>
-                                    { if *turn == 0 && *pit > 0 {
-                                        html! { <a href={ request_url }></a> }
-                                    } else { html! {} }}
-                                    <div class="pit" style={ style} >
-                                        { pit }
-                                    </div>
-                                </>
+                                <div class="pit" style={style}>
+                                   <a href={ request_url }> {pit} </a>
+                                </div>
                             }
                         })}
                     </div>
