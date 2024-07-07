@@ -7,6 +7,7 @@ use log::debug;
 use std::collections::HashMap;
 
 const BACKEND_URL: &str = "http://localhost:8000";
+const FRONTEND_URL: &str = "http://localhost:8080";
 
 #[derive(Deserialize, Debug, Clone)]
 struct PlayerData {
@@ -33,20 +34,20 @@ struct GameData {
     difficulty: i32,
     turn: i32,
     winner: i32,
-    players: std::collections::HashMap<i32, Player>,
+    players: HashMap<i32, Player>,
 }
 
 #[function_component(MainBoard)]
 pub fn main_board() -> Html {
-    let pebbles: HashMap<i32, &str> = [
-        (0, ""),
-        (1, "static/1stone.png"),
-        (2, "static/2stones.png"),
-        (3, "static/3stones.png"),
-        (4, "static/4stones.png"),
-        (5, "static/5stones.png"),
-        (6, "static/6stones.png"),
-    ].iter().cloned().collect();
+    let pebbles = HashMap::from([
+        (0, format!("{}/{}", FRONTEND_URL, "")),
+        (1, format!("{}/{}", FRONTEND_URL, "static/1stone.png")),
+        (2, format!("{}/{}", FRONTEND_URL, "static/2stones.png")),
+        (3, format!("{}/{}", FRONTEND_URL, "static/3stones.png")),
+        (4, format!("{}/{}", FRONTEND_URL, "static/4stones.png")),
+        (5, format!("{}/{}", FRONTEND_URL, "static/5stones.png")),
+        (6, format!("{}/{}", FRONTEND_URL, "static/6stones.png")),
+    ]);
 
     let turn = use_state(|| 0);
     let winner = use_state(|| -1);
@@ -93,17 +94,19 @@ pub fn main_board() -> Html {
                         { for board.players_data[1].pits.iter().rev().enumerate().map(|(index, pit)| {
                             let pit_index = board.players_data[1].pits.len() - index - 1;
                             let background_image = if *pit <= 6 {
-                                                             format!("/{}", pebbles.get(pit).unwrap_or(&""))
+                                                                pebbles.get(pit).unwrap_or(&"".to_string()).to_string()
                                                             } else {
                                                                 "static/multiple_stones.png".to_string()
                                                             };
                             let style = format!("background-image: url({}); background-repeat: no-repeat;", background_image);
                             let request_url = format!("/select?userid=1&pit={}&session={}", pit_index, data.session_id);
+                            debug!("Background image: {}", background_image);
                             html! {
                                 <>
-                                    { if *turn == 1 && *pit > 0 && !*ai {
-                                        html! { <a href={ request_url }> {"X"} </a> }
-                                    } else { html! {} }}
+                                // Make the pit clickable only if it's the player's turn and the pit is not empty
+                                    // { if *turn == 1 && *pit > 0 && !*ai {
+                                    //     html! { <a href={ request_url }> </a> }
+                                    // } else { html! {} }}
                                     <div class="pit" style={ style }>
                                         { pit }
                                     </div>
@@ -115,16 +118,30 @@ pub fn main_board() -> Html {
                     <div id="p1-pits" class={ p1_pits_class }>
                         { for board.players_data[0].pits.iter().enumerate().map(|(index, pit)| {
                             let background_image = if *pit <= 6 {
-                                                             format!("/{}", pebbles.get(pit).unwrap_or(&""))
+                                                                pebbles.get(pit).unwrap_or(&"".to_string()).to_string()
                                                             } else {
                                                                 "static/multiple_stones.png".to_string()
                                                             };
-                            let style = format!("background-image: url({}); background-repeat: no-repeat;", background_image);
+                            debug!("Background image: {:?}", background_image);
+                            let style = format!("background-image: url({:?}); background-repeat: no-repeat;", background_image);
                             let request_url = format!("/select?userid=1&pit={}&session={}", index, data.session_id);
+                            let stone_image = pebbles.get(pit).unwrap_or(&"".to_string());
                             html! {
-                                <div class="pit" style={style}>
-                                   <a href={ request_url }> {pit} </a>
-                                </div>
+                                <>
+                                    { if *turn == 0 && *pit > 0 && !*ai {
+                                        html! {
+                                            <a href={ request_url }>
+                                            <div class="pit" style={ style }>
+                                                { pit }
+                                            </div>
+                                            </a>
+                                        }
+                                    } else {
+                                        html! {
+                                            <div class="pit" style={ style }>{ pit }</div>
+                                        }
+                                    }}
+                                </>
                             }
                         })}
                     </div>
