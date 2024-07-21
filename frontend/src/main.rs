@@ -1,10 +1,13 @@
 use yew::prelude::*;
-mod components;
 use log::{Level};
+
+mod components;
+
 
 #[function_component(App)]
 fn app() -> Html {
     console_log::init_with_level(Level::Debug).expect("error initializing log");
+
     html! {
         <div id="container">
             <components::top_menu::TopMenu />
