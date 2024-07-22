@@ -6,6 +6,8 @@ use anyhow::Error;
 use serde::Deserialize;
 use log::{info, error, debug};
 use std::collections::HashMap;
+use stylist::{yew::styled_component, Style};
+
 use crate::components::atoms::pit::Pit;
 
 
@@ -62,11 +64,12 @@ pub struct PitProps {
     pub session_id: String,
 }
 
+pub enum Msg {
+    PitClicked(u32),
+}
 
-#[function_component(MainBoard)]
+#[styled_component(MainBoard)]
 pub fn main_board() -> Html {
-
-
 
     let turn = use_state(|| 0);
     let winner = use_state(|| -1);
@@ -102,9 +105,51 @@ pub fn main_board() -> Html {
         let p1_big_pit_class = if *winner == 0 { "big-pit-value blinking selected-pits" } else { "big-pit-value" };
     }
 
+    let style = Style::new(css!(
+        r#"
+            table {
+                border-collapse: collapse;
+                width: 770px;
+                margin-left: 140px;
+                margin-top: 35px;
+                height: 350px;
+            }
+            td {
+                padding: 10px;
+                text-align: center;
+
+            }
+        "#
+    )).unwrap();
+
+    let on_pit_clicked = {
+        Callback::from(move |id: u32| {
+            info!("Pit clicked: {}", id);
+        })
+    };
+
     html! {
-        <div id="main-board">
-            <Pit value=6 player_type={PlayerType::Player1} id=0 on_click={Callback::noop()} />
+        <div id="main-board" class={style}>
+            <table>
+                <tr>
+                    <td><Pit value=6 player_type={PlayerType::Player1} id=0 on_click={&on_pit_clicked} /></td>
+                    <td><Pit value=6 player_type={PlayerType::Player1} id=1 on_click={&on_pit_clicked} /></td>
+                    <td><Pit value=6 player_type={PlayerType::Player1} id=2 on_click={&on_pit_clicked} /></td>
+                    <td><Pit value=6 player_type={PlayerType::Player1} id=3 on_click={&on_pit_clicked} /></td>
+                    <td><Pit value=6 player_type={PlayerType::Player1} id=4 on_click={&on_pit_clicked} /></td>
+                    <td><Pit value=6 player_type={PlayerType::Player1} id=5 on_click={&on_pit_clicked} /></td>
+                </tr>
+                <tr>
+                    <td><Pit value=6 player_type={PlayerType::Player2} id=6 on_click={&on_pit_clicked} /></td>
+                    <td><Pit value=6 player_type={PlayerType::Player2} id=7 on_click={&on_pit_clicked} /></td>
+                    <td><Pit value=6 player_type={PlayerType::Player2} id=8 on_click={&on_pit_clicked} /></td>
+                    <td><Pit value=6 player_type={PlayerType::Player2} id=9 on_click={&on_pit_clicked} /></td>
+                    <td><Pit value=6 player_type={PlayerType::Player2} id=10 on_click={&on_pit_clicked} /></td>
+                    <td><Pit value=6 player_type={PlayerType::Player2} id=11 on_click={&on_pit_clicked} /></td>
+                </tr>
+
+             </table>
+
         </div>
     }
 }
