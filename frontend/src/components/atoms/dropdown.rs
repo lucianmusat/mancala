@@ -118,12 +118,14 @@ pub fn dropdown(props: &Props) -> Html {
     }
 
     html! {
-        <div class="{style} top-dropdown">
-            <button class="dropdown-button" onclick={toggle_dropdown}>{"Easy"} <span class="arrow down"></span></button>
-            <ul class="dropdown-menu" style={dropdown_style}>
-                <MenuElement text={"Easy"} on_click={easy_onclick} />
-                <MenuElement text={"Hard"} on_click={hard_onclick} />
-            </ul>
-        </div>
+        <section class={style}>
+            <div class="top-dropdown">
+                <button class="dropdown-button" onclick={toggle_dropdown}>{"Easy"} <span class="arrow down"></span></button>
+                <ul class="dropdown-menu" style={dropdown_style}>
+                    <MenuElement text={"Easy"} on_click={easy_onclick} />
+                    <MenuElement text={"Hard"} on_click={hard_onclick} />
+                </ul>
+            </div>
+        </section>
     }
 }
