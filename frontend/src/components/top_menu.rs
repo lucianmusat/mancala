@@ -1,10 +1,9 @@
 use yew::prelude::*;
-use wasm_bindgen::prelude::*;
 use web_sys::MouseEvent;
 use crate::components::atoms::menu_button::MenuButton;
 use crate::components::atoms::dropdown::Dropdown;
 use crate::components::atoms::dropdown::Difficulty;
-use log::{debug, error, info};
+use log::{info};
 
 #[function_component(TopMenu)]
 pub fn top_menu() -> Html {

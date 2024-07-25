@@ -3,12 +3,18 @@ use yew::prelude::*;
 use crate::components::main_board::PlayerType;
 
 
+#[derive(Clone, PartialEq)]
+pub struct ClickData {
+    pub player_type: PlayerType,
+    pub id: u32,
+}
+
 #[derive(Properties, Clone, PartialEq)]
 pub struct Props {
     pub value: u32,
     pub player_type: PlayerType,
     pub id: u32,
-    pub on_click: Callback<u32>,
+    pub on_click: Callback<ClickData>,
 }
 
 #[styled_component(Pit)]
@@ -16,8 +22,8 @@ pub fn pit(props: &Props) -> Html {
 
     fn stones_class(value: u32) -> String {
         match value {
-            value if value > 6 || value < 0 => "multiple-stones".to_string(),
-            value if value >=0 && value <= 6 => format!("stones-{}", value),
+            value if value > 6 => "multiple_stones".to_string(),
+            value if value <= 6 => format!("stones-{}", value),
             _ => "".to_string(),
         }
     }
@@ -50,13 +56,13 @@ pub fn pit(props: &Props) -> Html {
     ))
     .unwrap();
 
-    let on_click = {
-        let on_click = props.on_click.clone();
-        let id = props.id;
-        Callback::from(move |_: MouseEvent| {
-            on_click.emit(id);
-        })
-    };
+    let properties = props.clone();
+    let on_click = Callback::from(move |_: MouseEvent| {
+            let on_click = properties.on_click.clone();
+            let id = properties.id;
+            let player_type = properties.player_type.clone();
+            on_click.emit(ClickData { player_type, id });
+        });
 
     html! {
         <span class={style}>

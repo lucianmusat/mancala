@@ -1,14 +1,14 @@
 use yew::prelude::*;
 use yew::{Html, Properties};
-use wasm_bindgen::prelude::*;
 use reqwasm::http::Request;
 use anyhow::Error;
 use serde::Deserialize;
+use uuid::Uuid;
 use log::{info, error, debug};
 use std::collections::HashMap;
 use stylist::{yew::styled_component, Style};
 
-use crate::components::atoms::pit::Pit;
+use crate::components::atoms::pit::{ClickData, Pit};
 
 
 const BACKEND_URL: &str = "http://localhost:8000";
@@ -50,7 +50,7 @@ struct Player {
 
 #[derive(Deserialize, Debug, Clone)]
 struct GameData {
-    session_id: String,
+    session_id: Uuid,
     difficulty: i32,
     turn: i32,
     winner: i32,
@@ -71,11 +71,9 @@ pub enum Msg {
 #[styled_component(MainBoard)]
 pub fn main_board() -> Html {
 
-    let turn = use_state(|| 0);
-    let winner = use_state(|| -1);
     let game_data = use_state(|| None::<GameData>);
     let fetched = use_state(|| false);
-    let ai = use_state(|| false);
+    let _ai = use_state(|| false);
 
     {
         let game_data = game_data.clone();
@@ -93,17 +91,14 @@ pub fn main_board() -> Html {
         });
     }
 
-    info!("Game data: {:?}", game_data);
-
-    if let Some(data) = (*game_data).clone() {
-        let nr_players = data.players[&0].board.nr_players;
-        let players: Vec<Player> = data.players.values().cloned().collect();
-        let board: Board = data.players[&0].board.clone();
-        let p2_big_pit_class = if *winner == 1 { "big-pit-value blinking selected-pits" } else { "big-pit-value" };
-        let p2_pits_class = if *turn == 1 && *winner < 0 { "selected-pits" } else { "" };
-        let p1_pits_class = if *turn == 0 && *winner < 0 { "selected-pits" } else { "" };
-        let p1_big_pit_class = if *winner == 0 { "big-pit-value blinking selected-pits" } else { "big-pit-value" };
+    // Not sure if this is the best way, but for now let's leave it
+    if game_data.clone().is_none() {
+        return html! {
+            <div>{"Loading..."}</div>
+        };
     }
+
+    info!("Game data: {:?}", game_data.clone().as_ref().unwrap());
 
     let style = Style::new(css!(
         r#"
@@ -122,34 +117,41 @@ pub fn main_board() -> Html {
         "#
     )).unwrap();
 
+    let session_id = game_data.clone().as_ref().unwrap().session_id;
+
     let on_pit_clicked = {
-        Callback::from(move |id: u32| {
-            info!("Pit clicked: {}", id);
+        let session_id = session_id.clone();
+        let game_data = game_data.clone();
+        Callback::from(move |data: ClickData| {
+            info!("Pit clicked: {}", data.id);
+            let session_id = session_id.clone();
+            let game_data = game_data.clone();
+            wasm_bindgen_futures::spawn_local(async move {
+                match fetch_move(session_id, data.player_type, data.id).await {
+                    Ok(data) => game_data.set(Some(data)),
+                    Err(_) => error!("Failed to fetch move"),
+                }
+            });
         })
     };
+
+    let player_one_pits = &game_data.clone().as_ref().unwrap().players.get(&0).unwrap().board.players_data[0].pits.clone();
+    let player_two_pits = &game_data.clone().as_ref().unwrap().players.get(&1).unwrap().board.players_data[1].pits.clone();
 
     html! {
         <div id="main-board" class={style}>
             <table>
                 <tr>
-                    <td><Pit value=6 player_type={PlayerType::Player1} id=0 on_click={&on_pit_clicked} /></td>
-                    <td><Pit value=6 player_type={PlayerType::Player1} id=1 on_click={&on_pit_clicked} /></td>
-                    <td><Pit value=6 player_type={PlayerType::Player1} id=2 on_click={&on_pit_clicked} /></td>
-                    <td><Pit value=6 player_type={PlayerType::Player1} id=3 on_click={&on_pit_clicked} /></td>
-                    <td><Pit value=6 player_type={PlayerType::Player1} id=4 on_click={&on_pit_clicked} /></td>
-                    <td><Pit value=6 player_type={PlayerType::Player1} id=5 on_click={&on_pit_clicked} /></td>
+                    { for (0..6).rev().map(|i| html! {
+                        <td><Pit value={player_two_pits.get(i).map_or(0, |&v| v as u32)} player_type={PlayerType::Player2} id={i as u32} on_click={on_pit_clicked.clone()} /></td>
+                    }) }
                 </tr>
                 <tr>
-                    <td><Pit value=6 player_type={PlayerType::Player2} id=6 on_click={&on_pit_clicked} /></td>
-                    <td><Pit value=6 player_type={PlayerType::Player2} id=7 on_click={&on_pit_clicked} /></td>
-                    <td><Pit value=6 player_type={PlayerType::Player2} id=8 on_click={&on_pit_clicked} /></td>
-                    <td><Pit value=6 player_type={PlayerType::Player2} id=9 on_click={&on_pit_clicked} /></td>
-                    <td><Pit value=6 player_type={PlayerType::Player2} id=10 on_click={&on_pit_clicked} /></td>
-                    <td><Pit value=6 player_type={PlayerType::Player2} id=11 on_click={&on_pit_clicked} /></td>
+                    { for (0..6).rev().map(|i| html! {
+                        <td><Pit value={player_one_pits.get(5 - i).map_or(0, |&v| v as u32)} player_type={PlayerType::Player1} id={(5 - i) as u32} on_click={on_pit_clicked.clone()} /></td>
+                    }) }
                 </tr>
-
-             </table>
-
+            </table>
         </div>
     }
 }
@@ -167,4 +169,27 @@ async fn fetch_game_data() -> Result<GameData, Error> {
         .map_err(|err| anyhow::anyhow!("Failed to parse JSON: {}", err))?;
 
     Ok(data)
+}
+
+async fn fetch_move(session_id: Uuid, player_type: PlayerType,  pit_id: u32) -> Result<GameData, Error> {
+    debug!("Fetching move...");
+    let url = format!("{}/select?userid={}&session={}&pit={}", BACKEND_URL, player_type_to_int(player_type), session_id, pit_id);
+    let response = Request::get(&url)
+        .send()
+        .await
+        .map_err(|err| anyhow::anyhow!("Request failed: {}", err))?;
+
+    let data = response
+        .json::<GameData>()
+        .await
+        .map_err(|err| anyhow::anyhow!("Failed to parse JSON: {}", err))?;
+
+    Ok(data)
+}
+
+fn player_type_to_int(player_type: PlayerType) -> i32 {
+    match player_type {
+        PlayerType::Player1 => 0,
+        PlayerType::Player2 => 1,
+    }
 }

@@ -1,5 +1,4 @@
 use yew::prelude::*;
-use wasm_bindgen::prelude::*;
 use web_sys::MouseEvent;
 use stylist::{yew::styled_component, Style};
 

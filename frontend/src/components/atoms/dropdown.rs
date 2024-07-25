@@ -3,7 +3,7 @@ use wasm_bindgen::prelude::*;
 use web_sys::MouseEvent;
 use stylist::{yew::styled_component, Style};
 use crate::components::atoms::menu_element::MenuElement;
-use log::{debug, error, info};
+use log::{info};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Difficulty {
@@ -17,7 +17,7 @@ pub struct Props {
 }
 
 #[styled_component(Dropdown)]
-pub fn dropdown(props: &Props) -> Html {
+pub fn dropdown(_props: &Props) -> Html {
     let is_dropdown_visible = use_state(|| false);
 
     let toggle_dropdown = {
