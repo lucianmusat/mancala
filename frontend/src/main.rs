@@ -20,6 +20,7 @@ fn app() -> Html {
     html! {
         <div id="container">
             <components::top_menu::TopMenu game_data={(*game_data).clone()} on_game_data_change={&update_game_data}/>
+            <components::atoms::logo::Logo />
             <components::main_board::MainBoard game_data={(*game_data).clone()} on_game_data_change={&update_game_data} />
             <components::status::Status />
         </div>
