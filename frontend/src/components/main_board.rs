@@ -2,34 +2,33 @@ use yew::prelude::*;
 use yew::{Html, Properties};
 use reqwasm::http::Request;
 use anyhow::Error;
-use serde::Deserialize;
 use uuid::Uuid;
 use log::{info, error, debug};
-use std::collections::HashMap;
 use stylist::{yew::styled_component, Style};
 
 use crate::components::atoms::pit::{ClickData, Pit};
 use crate::common::types::{BACKEND_URL, GameData, PlayerType};
 
 
-pub enum Msg {
-    PitClicked(u32),
+#[derive(Properties, PartialEq)]
+pub struct Props {
+    pub game_data: Option<GameData>,
+    pub on_game_data_change: Callback<GameData>,
 }
 
 #[styled_component(MainBoard)]
-pub fn main_board() -> Html {
+pub fn main_board(props: &Props) -> Html {
 
-    let game_data = use_state(|| None::<GameData>);
     let fetched = use_state(|| false);
     let _ai = use_state(|| false);
 
     {
-        let game_data = game_data.clone();
+        let on_game_data_change = props.on_game_data_change.clone();
         use_effect(move || {
             if !*fetched {
                 wasm_bindgen_futures::spawn_local(async move {
                     match fetch_game_data().await {
-                        Ok(data) => game_data.set(Some(data)),
+                        Ok(data) =>  on_game_data_change.emit(data),
                         Err(err) => error!("Failed to fetch game data: {}", err),
                     }
                 });
@@ -40,13 +39,13 @@ pub fn main_board() -> Html {
     }
 
     // Not sure if this is the best way, but for now let's leave it
-    if game_data.clone().is_none() {
+    if props.game_data.is_none() {
         return html! {
             <div>{"Loading..."}</div>
         };
     }
 
-    info!("Game data: {:?}", game_data.clone().as_ref().unwrap());
+    info!("Game data: {:?}", &props.game_data.as_ref().unwrap());
 
     let style = Style::new(css!(
         r#"
@@ -65,26 +64,24 @@ pub fn main_board() -> Html {
         "#
     )).unwrap();
 
-    let session_id = game_data.clone().as_ref().unwrap().session_id;
+    let session_id = props.game_data.as_ref().unwrap().session_id;
 
     let on_pit_clicked = {
-        let session_id = session_id.clone();
-        let game_data = game_data.clone();
+        let on_game_data_change = props.on_game_data_change.clone();
         Callback::from(move |data: ClickData| {
             info!("Pit clicked: {}", data.id);
-            let session_id = session_id.clone();
-            let game_data = game_data.clone();
+            let on_game_data_change = on_game_data_change.clone();
             wasm_bindgen_futures::spawn_local(async move {
                 match fetch_move(session_id, data.player_type, data.id).await {
-                    Ok(data) => game_data.set(Some(data)),
+                    Ok(data) => on_game_data_change.emit(data),
                     Err(_) => error!("Failed to fetch move"),
                 }
             });
         })
     };
 
-    let player_one_pits = &game_data.clone().as_ref().unwrap().players.get(&0).unwrap().pits.clone();
-    let player_two_pits = &game_data.clone().as_ref().unwrap().players.get(&1).unwrap().pits.clone();
+    let player_one_pits = props.game_data.as_ref().unwrap().players.get(&0).unwrap().pits.clone();
+    let player_two_pits = props.game_data.as_ref().unwrap().players.get(&1).unwrap().pits.clone();
 
     html! {
         <div id="main-board" class={style}>

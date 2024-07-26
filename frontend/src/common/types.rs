@@ -1,6 +1,5 @@
 use std::collections::HashMap;
-use serde::{Deserialize, Deserializer};
-use std::str::FromStr;
+use serde::{Deserialize};
 use uuid::Uuid;
 
 pub(crate) const BACKEND_URL: &str = "http://localhost:8000";
