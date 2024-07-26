@@ -2,7 +2,8 @@ use yew::prelude::*;
 use log::{Level};
 
 mod components;
-
+mod stores;
+mod common;
 
 #[function_component(App)]
 fn app() -> Html {

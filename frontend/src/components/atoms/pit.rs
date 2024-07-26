@@ -1,6 +1,6 @@
 use stylist::{yew::styled_component, Style};
 use yew::prelude::*;
-use crate::components::main_board::PlayerType;
+use crate::common::types::PlayerType;
 
 
 #[derive(Clone, PartialEq)]

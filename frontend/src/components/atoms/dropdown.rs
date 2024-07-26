@@ -3,13 +3,9 @@ use wasm_bindgen::prelude::*;
 use web_sys::MouseEvent;
 use stylist::{yew::styled_component, Style};
 use crate::components::atoms::menu_element::MenuElement;
+use crate::common::types::Difficulty;
 use log::{info};
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum Difficulty {
-    Easy,
-    Hard,
-}
 
 #[derive(Properties, Clone, PartialEq)]
 pub struct Props {
