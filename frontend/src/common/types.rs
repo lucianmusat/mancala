@@ -1,10 +1,10 @@
 use std::collections::HashMap;
-use serde::{Deserialize};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 pub(crate) const BACKEND_URL: &str = "http://localhost:8000";
 
-#[derive(Debug, Clone, Default, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub enum PlayerType {
     #[default]
     #[serde(rename = "0")]
@@ -32,7 +32,7 @@ impl From<PlayerType> for u32 {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Default, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub enum Difficulty {
     #[default]
     #[serde(rename = "0")]
@@ -50,13 +50,13 @@ impl From<Difficulty> for u32 {
     }
 }
 
-#[derive(Deserialize, Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Player {
     pub big_pit: u32,
     pub pits: Vec<u32>,
 }
 
-#[derive(Deserialize, Debug, Clone, Default, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub struct GameData {
     pub session_id: Uuid,
