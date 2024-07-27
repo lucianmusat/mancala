@@ -80,18 +80,23 @@ pub fn main_board() -> Html {
 
     let player_one_pits = store.game_data.as_ref().unwrap().players.get(&0).unwrap().pits.clone();
     let player_two_pits = store.game_data.as_ref().unwrap().players.get(&1).unwrap().pits.clone();
+    let current_turn = &store.game_data.as_ref().unwrap().turn;
+    let player_one_disabled = *current_turn != PlayerType::Player1;
+    let player_two_disabled = *current_turn != PlayerType::Player2;
 
     html! {
         <div id="main-board" class={style}>
             <table>
                 <tr>
                     { for (0..6).rev().map(|i| html! {
-                        <td><Pit value={player_two_pits.get(i).map_or(0, |&v| v)} player_type={PlayerType::Player2} id={i as u32} on_click={on_pit_clicked.clone()} /></td>
+                        <td><Pit value={player_two_pits.get(i).map_or(0, |&v| v)} player_type={PlayerType::Player2}
+                                id={i as u32} on_click={on_pit_clicked.clone()} disabled={player_two_disabled} /></td>
                     }) }
                 </tr>
                 <tr>
                     { for (0..6).rev().map(|i| html! {
-                        <td><Pit value={player_one_pits.get(5 - i).map_or(0, |&v| v)} player_type={PlayerType::Player1} id={(5 - i) as u32} on_click={on_pit_clicked.clone()} /></td>
+                        <td><Pit value={player_one_pits.get(5 - i).map_or(0, |&v| v)} player_type={PlayerType::Player1}
+                                id={(5 - i) as u32} on_click={on_pit_clicked.clone()} disabled={player_one_disabled} /></td>
                     }) }
                 </tr>
             </table>

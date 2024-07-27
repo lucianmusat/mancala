@@ -15,6 +15,7 @@ pub struct Props {
     pub player_type: PlayerType,
     pub id: u32,
     pub on_click: Callback<ClickData>,
+    pub disabled: bool,
 }
 
 #[styled_component(Pit)]
@@ -52,21 +53,36 @@ pub fn pit(props: &Props) -> Html {
                 display: block;
                 transform: translateY(65px);
             }
+
+            .pit:not(.disabled):hover {
+                cursor: pointer;
+                filter: brightness(150%);
+            }
+
+            .pit.disabled {
+                opacity: 0.5;
+                cursor: default;
+            }
         "#
     ))
     .unwrap();
 
     let properties = props.clone();
-    let on_click = Callback::from(move |_: MouseEvent| {
+    let on_click = Callback::from(move |e: MouseEvent| {
+        if !properties.disabled {
             let on_click = properties.on_click.clone();
             let id = properties.id;
             let player_type = properties.player_type.clone();
             on_click.emit(ClickData { player_type, id });
+        }
+        e.prevent_default();
         });
+
+    let pit_class = classes!("pit", stones_class(props.value.clone()), if props.disabled { "disabled" } else { "" });
 
     html! {
         <span class={style}>
-            <div class={format!("pit {}", stones_class(props.value.clone()))} onclick={on_click} data-text={props.value.to_string()} />
+            <div class={pit_class} onclick={on_click} data-text={props.value.to_string()} />
         </span>
     }
 }
