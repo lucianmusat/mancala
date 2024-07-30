@@ -1,3 +1,4 @@
+use std::time::Duration;
 use yew::prelude::*;
 use yew::{Html};
 use reqwasm::http::Request;
@@ -6,6 +7,8 @@ use uuid::Uuid;
 use log::{info, error, debug};
 use stylist::{yew::styled_component, Style};
 use yewdux::prelude::*;
+use wasm_bindgen_futures::spawn_local;
+use gloo_timers::future::sleep;
 use crate::stores::state_store::{StateStore, update_game_data};
 use crate::components::atoms::pit::{ClickData, Pit};
 use crate::common::types::{BACKEND_URL, GameData, PlayerType};
@@ -14,14 +17,13 @@ use crate::common::types::{BACKEND_URL, GameData, PlayerType};
 pub fn main_board() -> Html {
     let (store, dispatch) = use_store::<StateStore>();
     let fetched = use_state(|| false);
-    let _ai = use_state(|| false);
 
     {
         let fetched = fetched.clone();
         let dispatch = dispatch.clone();
         use_effect(move || {
             if !*fetched {
-                wasm_bindgen_futures::spawn_local(async move {
+                spawn_local(async move {
                     match fetch_game_data().await {
                         Ok(data) => {
                             update_game_data(&dispatch, data.clone());
@@ -36,7 +38,29 @@ pub fn main_board() -> Html {
         });
     }
 
-    // Not sure if this is the best way, but for now let's leave it
+    {
+        let store = store.clone();
+        let dispatch = dispatch.clone();
+        use_effect(move || {
+            if let Some(game_data) = &store.game_data {
+                let player_one_disabled = game_data.turn != PlayerType::Player1;
+                let session_id = game_data.session_id;
+                if player_one_disabled {
+                    let dispatch = dispatch.clone();
+                    spawn_local(async move {
+                        sleep(Duration::from_secs(1)).await;
+                        // Make AI move
+                        match fetch_move(session_id, PlayerType::Player2, 0).await {
+                            Ok(data) => update_game_data(&dispatch, data),
+                            Err(err) => error!("Failed to fetch AI move: {}", err),
+                        }
+                    });
+                }
+            }
+            || ()
+        });
+    }
+
     if store.game_data.is_none() {
         return html! {
             <div>{"Loading..."}</div>

@@ -189,6 +189,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "console_log",
+ "gloo-timers 0.3.0",
  "log",
  "reqwasm",
  "serde",
