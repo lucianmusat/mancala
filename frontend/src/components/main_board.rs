@@ -11,6 +11,7 @@ use wasm_bindgen_futures::spawn_local;
 use gloo_timers::future::sleep;
 use crate::stores::state_store::{StateStore, update_game_data};
 use crate::components::atoms::pit::{ClickData, Pit};
+use crate::components::atoms::big_pit::BigPit;
 use crate::common::types::{BACKEND_URL, GameData, PlayerType};
 
 #[styled_component(MainBoard)]
@@ -71,17 +72,22 @@ pub fn main_board() -> Html {
 
     let style = Style::new(css!(
         r#"
-            table {
+            .big_board_table {
                 border-collapse: collapse;
-                width: 770px;
-                margin-left: 140px;
+                width: 745px;
                 margin-top: 35px;
+                margin-right: 5px;
                 height: 350px;
             }
             td {
                 padding: 10px;
                 text-align: center;
-
+            }
+            .left-margin {
+                width: 48px;
+            }
+            .left-margin-pits {
+                width: 20px;
             }
         "#
     )).unwrap();
@@ -93,7 +99,7 @@ pub fn main_board() -> Html {
         Callback::from(move |data: ClickData| {
             let dispatch = dispatch.clone();
             info!("Pit clicked: {}", data.id);
-            wasm_bindgen_futures::spawn_local(async move {
+            spawn_local(async move {
                 match fetch_move(session_id, data.player_type, data.id).await {
                     Ok(data) => update_game_data(&dispatch, data),
                     Err(_) => error!("Failed to fetch move"),
@@ -103,27 +109,35 @@ pub fn main_board() -> Html {
     };
 
     let player_one_pits = store.game_data.as_ref().unwrap().players.get(&0).unwrap().pits.clone();
+    let player_one_big_pit = store.game_data.as_ref().unwrap().players.get(&0).unwrap().big_pit;
     let player_two_pits = store.game_data.as_ref().unwrap().players.get(&1).unwrap().pits.clone();
+    let player_two_big_pit = store.game_data.as_ref().unwrap().players.get(&1).unwrap().big_pit;
     let current_turn = &store.game_data.as_ref().unwrap().turn;
     let player_one_disabled = *current_turn != PlayerType::Player1;
     let player_two_disabled = *current_turn != PlayerType::Player2;
 
     html! {
-        <div id="main-board" class={style}>
-            <table>
-                <tr>
-                    { for (0..6).rev().map(|i| html! {
-                        <td><Pit value={player_two_pits.get(i).map_or(0, |&v| v)} player_type={PlayerType::Player2}
-                                id={i as u32} on_click={on_pit_clicked.clone()} disabled={player_two_disabled} /></td>
-                    }) }
-                </tr>
-                <tr>
-                    { for (0..6).rev().map(|i| html! {
-                        <td><Pit value={player_one_pits.get(5 - i).map_or(0, |&v| v)} player_type={PlayerType::Player1}
-                                id={(5 - i) as u32} on_click={on_pit_clicked.clone()} disabled={player_one_disabled} /></td>
-                    }) }
-                </tr>
-            </table>
+       <div class={style} id="center-wrapper">
+            <div id="main-board">
+                <div class="left-margin"/>
+                <BigPit value={player_two_big_pit} player_type={PlayerType::Player2} reversed=false />
+                <div class="left-margin-pits"/>
+                <table class="big_board_table">
+                    <tr>
+                        { for (0..6).rev().map(|i| html! {
+                            <td><Pit value={player_two_pits.get(i).map_or(0, |&v| v)} player_type={PlayerType::Player2}
+                                    id={i as u32} on_click={on_pit_clicked.clone()} disabled={player_two_disabled} /></td>
+                        }) }
+                    </tr>
+                    <tr>
+                        { for (0..6).rev().map(|i| html! {
+                            <td><Pit value={player_one_pits.get(5 - i).map_or(0, |&v| v)} player_type={PlayerType::Player1}
+                                    id={(5 - i) as u32} on_click={on_pit_clicked.clone()} disabled={player_one_disabled} /></td>
+                        }) }
+                    </tr>
+                </table>
+                <BigPit value={player_one_big_pit} player_type={PlayerType::Player1} reversed=true/>
+            </div>
         </div>
     }
 }

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use yew::{ToHtml, Html, html};
 
 pub(crate) const BACKEND_URL: &str = "http://localhost:8000";
 
@@ -31,6 +32,16 @@ impl From<PlayerType> for u32 {
         }
     }
 }
+
+impl ToHtml for PlayerType {
+    fn to_html(&self) -> Html {
+        match self {
+            PlayerType::Player1 => html! { "Player 1" },
+            PlayerType::Player2 => html! { "Player 2" },
+        }
+    }
+}
+
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub enum Difficulty {

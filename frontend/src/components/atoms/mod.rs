@@ -3,3 +3,4 @@ pub(crate) mod dropdown;
 mod menu_element;
 pub(crate) mod pit;
 pub(crate) mod logo;
+pub(crate) mod big_pit;
