@@ -42,12 +42,13 @@ pub fn main_board() -> Html {
     {
         let store = store.clone();
         let dispatch = dispatch.clone();
+        let force_update = use_state(|| 0);
         use_effect(move || {
             if let Some(game_data) = &store.game_data {
-                let player_one_disabled = game_data.turn != PlayerType::Player1;
                 let session_id = game_data.session_id;
-                if player_one_disabled {
+                if game_data.turn == PlayerType::Player2 {
                     let dispatch = dispatch.clone();
+                    let force_update = force_update.clone();
                     spawn_local(async move {
                         sleep(Duration::from_secs(1)).await;
                         // Make AI move
@@ -55,6 +56,8 @@ pub fn main_board() -> Html {
                             Ok(data) => update_game_data(&dispatch, data),
                             Err(err) => error!("Failed to fetch AI move: {}", err),
                         }
+                        // Update the state to force re-run of effect
+                        force_update.set(*force_update + 1);
                     });
                 }
             }
@@ -75,9 +78,9 @@ pub fn main_board() -> Html {
             .big_board_table {
                 border-collapse: collapse;
                 width: 745px;
-                margin-top: 35px;
+                margin-top: 40px;
                 margin-right: 5px;
-                height: 350px;
+                height: 340px;
             }
             td {
                 padding: 10px;
