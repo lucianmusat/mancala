@@ -28,7 +28,7 @@ pub fn main_board() -> Html {
                     match fetch_game_data().await {
                         Ok(data) => {
                             update_game_data(&dispatch, data.clone());
-                            info!("Game data fetched successfully: {}", data.session_id);
+                            debug!("Game data fetched successfully: {}", data.session_id);
                         },
                         Err(err) => error!("Failed to fetch game data: {}", err),
                     }
@@ -71,7 +71,7 @@ pub fn main_board() -> Html {
         };
     }
 
-    info!("Game data: {:?}", store.game_data.as_ref().unwrap());
+    debug!("Game data: {:?}", store.game_data.as_ref().unwrap());
 
     let style = Style::new(css!(
         r#"
@@ -101,7 +101,7 @@ pub fn main_board() -> Html {
         let dispatch = dispatch.clone();
         Callback::from(move |data: ClickData| {
             let dispatch = dispatch.clone();
-            info!("Pit clicked: {}", data.id);
+            debug!("Pit clicked: {}", data.id);
             spawn_local(async move {
                 match fetch_move(session_id, data.player_type, data.id).await {
                     Ok(data) => update_game_data(&dispatch, data),

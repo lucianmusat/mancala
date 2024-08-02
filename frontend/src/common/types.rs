@@ -42,7 +42,6 @@ impl ToHtml for PlayerType {
     }
 }
 
-
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub enum Difficulty {
     #[default]

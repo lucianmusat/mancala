@@ -26,6 +26,7 @@ pub fn pit(props: &Props) -> Html {
             vertical-align: middle;
             font-weight: bold;
             font-size: 20px;
+            color: white;
         }
         "#
     ))
