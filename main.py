@@ -1,8 +1,10 @@
 import logging
+import uuid
 
 from fastapi import FastAPI, Request, status, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
 
 from datetime import timedelta
 from uuid import uuid4
@@ -14,7 +16,7 @@ from random_player import RandomPlayer
 from minimax_player import MiniMaxPlayer
 from board import Board, NO_WINNER
 
-REDIS_HOST = 'redis'
+REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
 REDIS_EXPIRATION_HOURS = 72
 
@@ -28,146 +30,172 @@ app = FastAPI(
     description="A basic implementation of the Mancala game",
 )
 
+# CORS configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://127.0.0.1:8080"],
+    allow_credentials=True,
+    allow_methods=["GET"],
+    allow_headers=["*"],
+)
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
-
-app.pebbles = {
-    0: "",
-    1: "1stone.png",
-    2: "2stones.png",
-    3: "3stones.png",
-    4: "4stones.png",
-    5: "5stones.png",
-    6: "6stones.png"
-}
 
 app.board = Board(nr_players=2)
 app.players = {
     0: HumanPlayer(0, app.board),
-    1: MiniMaxPlayer(1, app.board)
+    1: RandomPlayer(1, app.board)
 }
 app.turn = 0
 app.winner = NO_WINNER
 app.difficulty = 0
 
 
-def get_session_state(session_id: str) -> dict:
+def get_session_state(sessionid: str) -> dict:
     """
     Get the session state from redis.
-    :param session_id: The session id
+    :param sessionid: The session id
     """
-    session_state = redis.get(session_id)
+    session_state = redis.get(sessionid)
     if session_state:
+        print(f"Found session state: {pickle.loads(session_state)} for id {sessionid}")
         return pickle.loads(session_state)
     return {}
 
 
-def default_session_state() -> dict:
+def default_session_state(sessionid: str) -> dict:
     """
     Returns a default session state.
     """
-    return {"board": app.board,
-            "turn": app.turn,
-            "winner": app.winner,
-            "players": app.players,
-            "difficulty": 0,
+    ret = {
+        "session_id": sessionid,
+        "difficulty": "0",
+        "turn": "0",
+        "winner": None,
+        "board": app.board,
+        "players": {
+            0: app.players[0],
+            1: app.players[1]
+        }
+    }
+    print(f"Setting default session state: {ret}")
+    return ret
+
+
+def generate_response(sessionid: str) -> dict:
+    session_state = get_session_state(sessionid)
+    return {
+        "session_id": sessionid,
+        "difficulty": str(session_state['difficulty']),
+        "turn": str(session_state['turn'] % 2),
+        "winner": str(session_state['winner']) if session_state['winner'] is not None else None,
+        "players": {
+            0: {
+                "big_pit": session_state['board'].players_data[0].big_pit,
+                "pits": session_state['board'].players_data[0].pits
+            },
+            1: {
+                "big_pit": session_state['board'].players_data[1].big_pit,
+                "pits": session_state['board'].players_data[1].pits
             }
-
-
-def populate_board(request: Request, session_id: str) -> templates.TemplateResponse:
-    """
-    Populates the board with the current session state.
-    :param request: The current request context
-    :param session_id: The session id for which the board is populated
-    :return: TemplateResponse that will render the board
-    """
-    session_state = get_session_state(session_id)
-    if not session_state:
-        return templates.TemplateResponse("404.html", {
-            "request": request
-        })
-    return templates.TemplateResponse("index.html", {
-        "request": request,
-        "board": session_state['board'],
-        "pebbles": app.pebbles,
-        "turn": session_state['turn'] % 2,
-        "winner": session_state['winner'],
-        "ai": not all(isinstance(player, HumanPlayer) for player in session_state['players'].values()),
-        "session_id": session_id,
-        "difficulty": session_state['difficulty'],
-    })
+        }
+    }
 
 
 @app.get("/")
-def index(request: Request, session: str = Query(default="")):
+def index(sessionid: str = Query(default="")):
     """
     Main index Api call. Generates a new session id.
-    :param request: Current request context
-    :param session: Session id to use in case of a continued game
+    :param sessionid: Session id to use in case of a continued game
     :return: TemplateResponse that will render the landing page
     """
-    if session:
-        return populate_board(request, session)
-    session_id = str(uuid4())
-    redis.setex(session_id, timedelta(hours=REDIS_EXPIRATION_HOURS), pickle.dumps(default_session_state()))
-    return populate_board(request, session_id)
+    if sessionid:
+        print("No need to reset")
+    else:
+        sessionid = str(uuid4())
+        redis.setex(sessionid, timedelta(hours=REDIS_EXPIRATION_HOURS), pickle.dumps(default_session_state(sessionid)))
+    response = {
+        "session_id": sessionid,
+        "difficulty": "0",
+        "turn": "0",
+        "winner": None,
+        "players": {
+            0: {
+                "big_pit": app.players[0].board.players_data[0].big_pit,
+                "pits": app.players[0].board.players_data[0].pits
+            },
+            1: {
+                "big_pit": app.players[1].board.players_data[1].big_pit,
+                "pits": app.players[1].board.players_data[1].pits
+            }
+        }
+    }
+    print(f"Response: {response}")
+    return response
 
 
 @app.get("/select/")
-def pit_selected(request: Request,
-                 userid: int = Query(ge=0, le=1),
+def pit_selected(userid: int = Query(ge=0, le=1),
                  pit: int = Query(ge=0, le=5),
-                 session: str = Query(default="")):
+                 sessionid: str = Query(default="")):
     """
     Api call upon selecting a pit to play from. Called
-    by clicking on the pit in the GUI
-    :param request: Current request context
+    by clicking in the pit in the GUI
     :param userid: Which user made the choice
     :param pit: Chosen pit index from the user's pit list
-    :param session: Session id to use
-    :param difficulty: Difficulty level of the AI (0 easy, 1 hard)
+    :param sessionid: Session id to use
     :return: TemplateResponse that will render the board with the new data
     """
-    session_state = get_session_state(session)
+    session_state = get_session_state(sessionid)
+    print(f"Session state: {session_state}")
     assert len(session_state), "Session not found!"
-    if session_state['winner'] < 0:
+    if session_state['winner'] is None:
         if isinstance(session_state['players'][userid], HumanPlayer):
             session_state['players'][userid].select_pit(pit)
         if session_state['players'][userid].move():
-            session_state['turn'] += 1
-        session_state['winner'] = session_state['board'].winner
-    redis.setex(session, timedelta(hours=REDIS_EXPIRATION_HOURS), pickle.dumps(session_state))
-    return populate_board(request, session)
+            session_state['turn'] = int(session_state['turn']) + 1
+        session_state['winner'] = session_state['winner']
+    redis.setex(sessionid, timedelta(hours=REDIS_EXPIRATION_HOURS), pickle.dumps(session_state))
+    response = generate_response(sessionid)
+    print(f"Response: {response}")
+    return response
 
 
 @app.get("/reset")
-def reset(request: Request, session: str = Query(default=""), difficulty: int = Query(ge=0, le=1)):
+def reset(sessionid: str = Query(default=""), difficulty: int = Query(ge=0, le=1)):
     """
     Reset the game to it's initial state.
-    :param request: Current request context
-    :param session: Session id to use
+    :param sessionid: Session id to use
     :param difficulty: Difficulty level of the AI (0 easy, 1 hard)
     :return: TemplateResponse that will render the freshly reset board
     """
-    new_session = default_session_state()
-    new_session['difficulty'] = difficulty
+    session_state = get_session_state(sessionid)
+    session_state['difficulty'] = difficulty
     if difficulty == 0:
-        logging.debug("Using AI easy")
-        new_session['players'][1] = RandomPlayer(1, new_session['board'])
+        print("Using AI easy")
+        session_state['players'][1] = RandomPlayer(1, app.players[1].board)
     else:
-        logging.debug("Using AI hard")
-        new_session['players'][1] = MiniMaxPlayer(1, new_session['board'])
-    redis.setex(session, timedelta(hours=REDIS_EXPIRATION_HOURS), pickle.dumps(new_session))
-    return populate_board(request, session)
+        print("Using AI hard")
+        session_state['players'][1] = MiniMaxPlayer(1, app.players[1].board)
+    app.players[1].board.reset()
+    app.players[0].board.reset()
+    app.board.reset()
+    session_state['turn'] = 0
+    session_state['board'].reset()
+    redis.setex(sessionid, timedelta(hours=REDIS_EXPIRATION_HOURS), pickle.dumps(session_state))
+    print(f"Set to redis {session_state}")
+    print(f"Generated response: {generate_response(sessionid)}")
+    return generate_response(sessionid)
 
 
-@app.get("/about")
-def index(request: Request, session: str = Query(default="")):
-    """
-    About page Api call.
-    :return: TemplateResponse that will render the about page
-    """
-    return templates.TemplateResponse("about.html", {"request": request, "session_id": session})
+# @app.get("/about")
+# def index(request: Request, session: str = Query(default="")):
+#     """
+#     About page Api call.
+#     :return: TemplateResponse that will render the about page
+#     """
+#     return templates.TemplateResponse("about.html", {"request": request, "session_id": session})
 
 
 @app.exception_handler(status.HTTP_404_NOT_FOUND)
@@ -180,6 +208,4 @@ def http_exception_handler(request, _):
     :param _:
     :return: TemplateResponse that will render the 404 page
     """
-    return templates.TemplateResponse("404.html", {
-        "request": request
-    })
+    return 404
