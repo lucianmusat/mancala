@@ -4,10 +4,11 @@ use web_sys::MouseEvent;
 use stylist::{yew::styled_component, Style};
 use crate::components::atoms::menu_element::MenuElement;
 use crate::common::types::{BACKEND_URL, Difficulty};
-use log::{info};
+use log::{debug, info, error};
 use yewdux::use_store;
 use reqwasm::http::Request;
-use crate::stores::state_store::{StateStore};
+use wasm_bindgen_futures::spawn_local;
+use crate::stores::state_store::{fetch_game_data, StateStore, update_game_data};
 
 #[derive(Properties, Clone, PartialEq)]
 pub struct Props {
@@ -18,7 +19,7 @@ pub struct Props {
 pub fn dropdown(_props: &Props) -> Html {
     let is_dropdown_visible = use_state(|| false);
     let diff_str = use_state(|| "Easy".to_string());
-    let (store, _) = use_store::<StateStore>();
+    let (store, dispatch) = use_store::<StateStore>();
 
     let toggle_dropdown = {
         let is_dropdown_visible = is_dropdown_visible.clone();
@@ -108,18 +109,21 @@ pub fn dropdown(_props: &Props) -> Html {
     .unwrap();
 
     let store_clone = store.clone();
+    let dispatch_clone = dispatch.clone();
     let diff_str_clone = diff_str.clone();
     let change_difficulty = move |difficulty: u8|{
         let store = store_clone.clone();
+        let dispatch = dispatch_clone.clone();
         let is_dropdown_visible = is_dropdown_visible.clone();
         let diff_str = diff_str_clone.clone();
         Callback::from(move |_ : MouseEvent| {
             let store = store.clone();
+            let dispatch = dispatch.clone();
             let diff_str = diff_str.clone();
             let current_difficulty = match diff_str.as_str() {
                 "Easy" => Difficulty::Easy as u8,
                 "Hard" => Difficulty::Hard as u8,
-                _ => return, // Invalid state, do nothing
+                _ => return,
             };
 
             if difficulty == current_difficulty {
@@ -128,8 +132,9 @@ pub fn dropdown(_props: &Props) -> Html {
                 return;
             }
             if let Some(data) = &store.game_data {
+                let session_id = data.session_id;
                 let url = format!("{}/reset?sessionid={}&difficulty={}", BACKEND_URL, data.session_id, difficulty);
-                wasm_bindgen_futures::spawn_local(async move {
+                spawn_local(async move {
                     let diff_str = diff_str.clone();
                     match Request::get(&url).send().await {
                         Ok(_) => {
@@ -137,6 +142,15 @@ pub fn dropdown(_props: &Props) -> Html {
                             diff_str.set(match difficulty {
                                 1 => "Hard".to_owned(),
                                 _ => "Easy".to_owned(),
+                            });
+                            spawn_local(async move {
+                                match fetch_game_data(Some(session_id)).await {
+                                    Ok(data) => {
+                                        update_game_data(&dispatch, data.clone());
+                                        debug!("Game data fetched successfully: {}", data.session_id);
+                                    },
+                                    Err(err) => error!("Failed to fetch game data: {}", err),
+                                }
                             });
                         },
                         Err(err) => log::error!("Difficulty change failed: {}", err),

@@ -9,7 +9,7 @@ use stylist::{yew::styled_component, Style};
 use yewdux::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use gloo_timers::future::sleep;
-use crate::stores::state_store::{StateStore, update_game_data};
+use crate::stores::state_store::{StateStore, update_game_data, fetch_game_data};
 use crate::components::atoms::pit::{ClickData, Pit};
 use crate::components::atoms::big_pit::BigPit;
 use crate::common::types::{BACKEND_URL, GameData, PlayerType};
@@ -25,7 +25,7 @@ pub fn main_board() -> Html {
         use_effect(move || {
             if !*fetched {
                 spawn_local(async move {
-                    match fetch_game_data().await {
+                    match fetch_game_data(None).await {
                         Ok(data) => {
                             update_game_data(&dispatch, data.clone());
                             debug!("Game data fetched successfully: {}", data.session_id);
@@ -143,20 +143,6 @@ pub fn main_board() -> Html {
             </div>
         </div>
     }
-}
-
-async fn fetch_game_data() -> Result<GameData, Error> {
-    debug!("Fetching game data...");
-    let response = Request::get(BACKEND_URL)
-        .send()
-        .await
-        .map_err(|err| anyhow::anyhow!("Request failed: {}", err))?;
-    let data = response
-        .json::<GameData>()
-        .await
-        .map_err(|err| anyhow::anyhow!("Failed to parse JSON: {}", err))?;
-
-    Ok(data)
 }
 
 async fn fetch_move(session_id: Uuid, player_type: PlayerType,  pit_id: u32) -> Result<GameData, Error> {

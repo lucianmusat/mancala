@@ -36,7 +36,7 @@ pub fn top_menu() -> Html {
                     match Request::get(&url).send().await {
                         Ok(_) => {
                             info!("Reset successful");
-                            match fetch_game_data().await {
+                            match fetch_game_data(None).await {
                                 Ok(new_data) => update_game_data(&dispatch, new_data),
                                 Err(err) => log::error!("Failed to fetch new game data: {}", err),
                             }
