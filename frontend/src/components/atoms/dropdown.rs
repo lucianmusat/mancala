@@ -3,9 +3,11 @@ use wasm_bindgen::prelude::*;
 use web_sys::MouseEvent;
 use stylist::{yew::styled_component, Style};
 use crate::components::atoms::menu_element::MenuElement;
-use crate::common::types::Difficulty;
+use crate::common::types::{BACKEND_URL, Difficulty};
 use log::{info};
-
+use yewdux::use_store;
+use reqwasm::http::Request;
+use crate::stores::state_store::{StateStore};
 
 #[derive(Properties, Clone, PartialEq)]
 pub struct Props {
@@ -15,6 +17,8 @@ pub struct Props {
 #[styled_component(Dropdown)]
 pub fn dropdown(_props: &Props) -> Html {
     let is_dropdown_visible = use_state(|| false);
+    let diff_str = use_state(|| "Easy".to_string());
+    let (store, _) = use_store::<StateStore>();
 
     let toggle_dropdown = {
         let is_dropdown_visible = is_dropdown_visible.clone();
@@ -103,23 +107,55 @@ pub fn dropdown(_props: &Props) -> Html {
     ))
     .unwrap();
 
-    fn easy_onclick(e: MouseEvent) {
-        e.prevent_default();
-        info!("Easy clicked");
-    }
+    let store_clone = store.clone();
+    let diff_str_clone = diff_str.clone();
+    let change_difficulty = move |difficulty: u8|{
+        let store = store_clone.clone();
+        let is_dropdown_visible = is_dropdown_visible.clone();
+        let diff_str = diff_str_clone.clone();
+        Callback::from(move |_ : MouseEvent| {
+            let store = store.clone();
+            let diff_str = diff_str.clone();
+            let current_difficulty = match diff_str.as_str() {
+                "Easy" => Difficulty::Easy as u8,
+                "Hard" => Difficulty::Hard as u8,
+                _ => return, // Invalid state, do nothing
+            };
 
-    fn hard_onclick(e: MouseEvent) {
-        e.prevent_default();
-        info!("Hard clicked");
-    }
+            if difficulty == current_difficulty {
+                // Difficulty hasn't changed, do nothing
+                is_dropdown_visible.set(false);
+                return;
+            }
+            if let Some(data) = &store.game_data {
+                let url = format!("{}/reset?sessionid={}&difficulty={}", BACKEND_URL, data.session_id, difficulty);
+                wasm_bindgen_futures::spawn_local(async move {
+                    let diff_str = diff_str.clone();
+                    match Request::get(&url).send().await {
+                        Ok(_) => {
+                            info!("Switched AI to {:?}", difficulty);
+                            diff_str.set(match difficulty {
+                                1 => "Hard".to_owned(),
+                                _ => "Easy".to_owned(),
+                            });
+                        },
+                        Err(err) => log::error!("Difficulty change failed: {}", err),
+                    }
+                });
+            } else {
+                log::error!("Cannot change difficulty: game data not available");
+            }
+            is_dropdown_visible.set(false);
+        })
+    };
 
     html! {
         <section class={style}>
             <div class="top-dropdown">
-                <button class="dropdown-button" onclick={toggle_dropdown}>{"Easy"} <span class="arrow down"></span></button>
+                <button class="dropdown-button" onclick={toggle_dropdown}>{&*diff_str}<span class="arrow down"></span></button>
                 <ul class="dropdown-menu" style={dropdown_style}>
-                    <MenuElement text={"Easy"} on_click={easy_onclick} />
-                    <MenuElement text={"Hard"} on_click={hard_onclick} />
+                    <MenuElement text={"Easy"} on_click={change_difficulty(Difficulty::Easy as u8)} />
+                    <MenuElement text={"Hard"} on_click={change_difficulty(Difficulty::Hard as u8)} />
                 </ul>
             </div>
         </section>

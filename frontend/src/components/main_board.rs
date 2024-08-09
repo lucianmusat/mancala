@@ -4,7 +4,7 @@ use yew::{Html};
 use reqwasm::http::Request;
 use anyhow::Error;
 use uuid::Uuid;
-use log::{info, error, debug};
+use log::{error, debug};
 use stylist::{yew::styled_component, Style};
 use yewdux::prelude::*;
 use wasm_bindgen_futures::spawn_local;
@@ -87,7 +87,7 @@ pub fn main_board() -> Html {
                 text-align: center;
             }
             .left-margin {
-                width: 48px;
+                width: 46px;
             }
             .left-margin-pits {
                 width: 20px;
@@ -161,7 +161,7 @@ async fn fetch_game_data() -> Result<GameData, Error> {
 
 async fn fetch_move(session_id: Uuid, player_type: PlayerType,  pit_id: u32) -> Result<GameData, Error> {
     debug!("Fetching move...");
-    let url = format!("{}/select?userid={}&session={}&pit={}", BACKEND_URL, player_type as u32, session_id, pit_id);
+    let url = format!("{}/select?userid={}&sessionid={}&pit={}", BACKEND_URL, player_type as u32, session_id, pit_id);
     let response = Request::get(&url)
         .send()
         .await

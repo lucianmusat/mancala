@@ -7,7 +7,7 @@ use crate::stores::state_store::StateStore;
 
 #[styled_component(Status)]
 pub fn status() -> Html {
-    let (store, dispatch) = use_store::<StateStore>();
+    let (store, _) = use_store::<StateStore>();
 
     let style = Style::new(css!(
         r#"
@@ -63,7 +63,7 @@ fn is_visible(store: &StateStore) -> bool {
 fn winner_text(store: &StateStore) -> String {
     let winner = store.game_data.as_ref().map(|data| &data.winner).unwrap_or(&None);
     if winner.is_none() {
-        return "It's a tie!".to_string();
+        return "".to_string();
     }
     format!("{} wins!", winner_to_string(winner))
 }
