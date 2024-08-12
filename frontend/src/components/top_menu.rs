@@ -31,12 +31,13 @@ pub fn top_menu() -> Html {
             let dispatch = dispatch.clone();
             let store = store.clone();
             if let Some(data) = &store.game_data {
-                let url = format!("{}/reset?sessionid={}&difficulty={}", BACKEND_URL, data.session_id, data.difficulty.clone() as u8);
+                let url = format!("{}/reset?sessionid={}&difficulty={}", BACKEND_URL, data.session_id.clone(), data.difficulty.clone() as u8);
+                let game_data = store.game_data.clone();
                 wasm_bindgen_futures::spawn_local(async move {
                     match Request::get(&url).send().await {
                         Ok(_) => {
                             info!("Reset successful");
-                            match fetch_game_data(None).await {
+                            match fetch_game_data(Some(game_data.unwrap().session_id.clone())).await {
                                 Ok(new_data) => update_game_data(&dispatch, new_data),
                                 Err(err) => log::error!("Failed to fetch new game data: {}", err),
                             }

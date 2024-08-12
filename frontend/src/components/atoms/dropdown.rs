@@ -4,7 +4,7 @@ use web_sys::MouseEvent;
 use stylist::{yew::styled_component, Style};
 use crate::components::atoms::menu_element::MenuElement;
 use crate::common::types::{BACKEND_URL, Difficulty};
-use log::{debug, info, error};
+use log::{debug, error};
 use yewdux::use_store;
 use reqwasm::http::Request;
 use wasm_bindgen_futures::spawn_local;
@@ -135,14 +135,8 @@ pub fn dropdown(_props: &Props) -> Html {
                 let session_id = data.session_id;
                 let url = format!("{}/reset?sessionid={}&difficulty={}", BACKEND_URL, data.session_id, difficulty);
                 spawn_local(async move {
-                    let diff_str = diff_str.clone();
                     match Request::get(&url).send().await {
                         Ok(_) => {
-                            info!("Switched AI to {:?}", difficulty);
-                            diff_str.set(match difficulty {
-                                1 => "Hard".to_owned(),
-                                _ => "Easy".to_owned(),
-                            });
                             spawn_local(async move {
                                 match fetch_game_data(Some(session_id)).await {
                                     Ok(data) => {
@@ -162,6 +156,22 @@ pub fn dropdown(_props: &Props) -> Html {
             is_dropdown_visible.set(false);
         })
     };
+
+    // Update dropdown menu text based on the current difficulty level
+    let diff_str_clone = diff_str.clone();
+    use_effect(move || {
+        if let Some(game_data) = &store.game_data {
+            // TODO: update using the enum to str conversion
+            let new_diff_str = match game_data.difficulty {
+                Difficulty::Hard => "Hard".to_owned(),
+                Difficulty::Easy => "Easy".to_owned(),
+            };
+            if *diff_str_clone != new_diff_str {
+                diff_str_clone.set(new_diff_str);
+            }
+        }
+        || ()
+    });
 
     html! {
         <section class={style}>
