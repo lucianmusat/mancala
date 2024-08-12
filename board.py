@@ -16,6 +16,7 @@ class PlayerData:
     big_pit: int = 0
     pits: List[int] = dataclasses.field(default_factory=lambda: [STARTING_STONES] * NUMBER_OF_PITS)
 
+
 class Board:
     """
     The class that manages the board state. Keeps track of all the pits, big pits
