@@ -1,9 +1,4 @@
-import logging
-import uuid
-
-from fastapi import FastAPI, Request, status, Query
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+from fastapi import FastAPI, Request, status, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from datetime import timedelta
@@ -39,9 +34,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# app.mount("/static", StaticFiles(directory="static"), name="static")
-# templates = Jinja2Templates(directory="templates")
-
 app.board = Board(nr_players=2)
 app.players = {
     0: HumanPlayer(0, app.board),
@@ -64,13 +56,13 @@ def get_session_state(sessionid: str) -> dict:
     return {}
 
 
-def default_session_state(sessionid: str) -> dict:
+def default_session_state(sessionid: str, difficulty: str) -> dict:
     """
     Returns a default session state.
     """
     ret = {
         "session_id": sessionid,
-        "difficulty": "0",
+        "difficulty": difficulty,
         "turn": "0",
         "winner": None,
         "board": app.board,
@@ -111,8 +103,10 @@ def index(sessionid: str = Query(default="")):
     :return: TemplateResponse that will render the landing page
     """
     if not sessionid:
+        print("Could not find previous session id, creating a new one")
         sessionid = str(uuid4())
-        redis.setex(sessionid, timedelta(hours=REDIS_EXPIRATION_HOURS), pickle.dumps(default_session_state(sessionid)))
+        redis.setex(sessionid, timedelta(hours=REDIS_EXPIRATION_HOURS),
+                    pickle.dumps(default_session_state(sessionid, "0")))
     else:
         session_state = get_session_state(sessionid)
         app.board = session_state['board']
@@ -123,7 +117,7 @@ def index(sessionid: str = Query(default="")):
 
     response = {
         "session_id": sessionid,
-        "difficulty": "0",
+        "difficulty": app.difficulty,
         "turn": "0",
         "winner": None,
         "players": {
@@ -158,10 +152,8 @@ def pit_selected(userid: int = Query(ge=0, le=1),
     if session_state['winner'] is None:
         if isinstance(session_state['players'][userid], HumanPlayer):
             session_state['players'][userid].select_pit(pit)
-        print(f"[{session_state['players'][userid].board}]")
         if session_state['players'][userid].move():
             session_state['turn'] = int(session_state['turn']) + 1
-        print(f"After move: [{session_state['players'][userid].board}]")
     redis.setex(sessionid, timedelta(hours=REDIS_EXPIRATION_HOURS), pickle.dumps(session_state))
     response = generate_response(sessionid)
     print(f"Response: {response}")
@@ -191,30 +183,14 @@ def reset(sessionid: str = Query(default=""), difficulty: int = Query(ge=0, le=1
         print("Using AI hard")
         app.players[1] = MiniMaxPlayer(1, app.board)
 
-    session_state = default_session_state(sessionid)
+    session_state = default_session_state(sessionid, str(difficulty))
     redis.setex(sessionid, timedelta(hours=REDIS_EXPIRATION_HOURS), pickle.dumps(session_state))
     # print(f"Set to redis {session_state}")
     print(f"Generated response: {generate_response(sessionid)}")
     return generate_response(sessionid)
 
 
-# @app.get("/about")
-# def index(request: Request, session: str = Query(default="")):
-#     """
-#     About page Api call.
-#     :return: TemplateResponse that will render the about page
-#     """
-#     return templates.TemplateResponse("about.html", {"request": request, "session_id": session})
-
-
 @app.exception_handler(status.HTTP_404_NOT_FOUND)
 @app.exception_handler(status.HTTP_422_UNPROCESSABLE_ENTITY)
-def http_exception_handler(request, _):
-    """
-    Handle other missing api calls by rendering
-    a friendly 404 page.
-    :param request: Current request context
-    :param _:
-    :return: TemplateResponse that will render the 404 page
-    """
-    return 404
+def http_exception_handler():
+    raise HTTPException(status_code=404, detail="Item not found")
