@@ -14,16 +14,22 @@ use crate::components::atoms::pit::{ClickData, Pit};
 use crate::components::atoms::big_pit::BigPit;
 use crate::common::types::{BACKEND_URL, GameData, PlayerType};
 
+#[derive(Properties, PartialEq, Clone)]
+pub struct Props {
+    pub keep_session: bool,
+}
+
 #[styled_component(MainBoard)]
-pub fn main_board() -> Html {
+pub fn main_board(props: &Props) -> Html {
     let (store, dispatch) = use_store::<StateStore>();
     let fetched = use_state(|| false);
 
     {
         let fetched = fetched.clone();
         let dispatch = dispatch.clone();
+        let keep_session  = props.keep_session;
         use_effect(move || {
-            if !*fetched {
+            if !*fetched && !keep_session {
                 spawn_local(async move {
                     match fetch_game_data(None).await {
                         Ok(data) => {

@@ -9,6 +9,8 @@ mod common;
 #[derive(Clone, Routable, PartialEq)]
 enum Route {
     #[at("/")]
+    Index,
+    #[at("/home")]
     Home,
     #[at("/about")]
     About,
@@ -18,18 +20,19 @@ enum Route {
 
 fn switch(route: Route) -> Html {
     match route {
-        Route::Home => html! { main_page() },
+        Route::Index => html! { main_page(false) },
+        Route::Home => html! { main_page(true) },
         Route::About => html! { about_page() },
         Route::NotFound => html! { not_found_page() },
     }
 }
 
-fn main_page() -> Html {
+fn main_page(keep_session: bool) -> Html {
     html! {
         <div id="container">
             <components::top_menu::TopMenu/>
             <components::atoms::logo::Logo />
-            <components::main_board::MainBoard />
+            <components::main_board::MainBoard keep_session={keep_session} />
             <components::status::Status />
         </div>
     }
