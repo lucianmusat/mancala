@@ -122,11 +122,11 @@ def index(sessionid: str = Query(default="")):
         "winner": None,
         "players": {
             0: {
-                "big_pit": app.players[0].board.players_data[0].big_pit,
+                "big_pit": app.board.players_data[0].big_pit,
                 "pits": app.players[0].board.players_data[0].pits
             },
             1: {
-                "big_pit": app.players[1].board.players_data[1].big_pit,
+                "big_pit": app.board.players_data[1].big_pit,
                 "pits": app.players[1].board.players_data[1].pits
             }
         }
@@ -149,11 +149,13 @@ def pit_selected(userid: int = Query(ge=0, le=1),
     """
     session_state = get_session_state(sessionid)
     assert len(session_state), "Session not found!"
-    if session_state['winner'] is None:
+    if not session_state['board'].game_over():
         if isinstance(session_state['players'][userid], HumanPlayer):
             session_state['players'][userid].select_pit(pit)
         if session_state['players'][userid].move():
             session_state['turn'] = int(session_state['turn']) + 1
+    else:
+        session_state['winner'] = session_state['board'].winner
     redis.setex(sessionid, timedelta(hours=REDIS_EXPIRATION_HOURS), pickle.dumps(session_state))
     response = generate_response(sessionid)
     print(f"Response: {response}")
