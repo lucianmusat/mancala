@@ -149,37 +149,6 @@ a:hover .pit {
   }
 }
 
-.about-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1000px;
-  margin: auto;
-  background-color: #572a1b;
-  font-size: 18px;
-  color: #e1dbde;
-  border: 20px solid #74452c;
-  border-radius: 25px;
-  padding: 20px;
-  box-sizing: border-box;
-}
-
-.about-container img {
-  max-width: 100%;
-  max-height: 100%;
-  margin-right: 20px;
-}
-
-.about-container p {
-  flex: 1;
-  margin: 0;
-  text-align: left;
-}
-
-.about-container p a {
-  color: #a13961;
-}
-
 .stones-6 {
     background-image: url('6stones.png');
 }

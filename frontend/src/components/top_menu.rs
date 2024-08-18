@@ -1,4 +1,5 @@
 use yew::prelude::*;
+use yew_router::prelude::*;
 use web_sys::MouseEvent;
 use crate::components::atoms::menu_button::MenuButton;
 use crate::components::atoms::dropdown::Dropdown;
@@ -6,22 +7,32 @@ use log::{info, error};
 use yewdux::prelude::*;
 use reqwasm::http::Request;
 use crate::common::types::{BACKEND_URL};
+use crate::Route;
 use crate::stores::state_store::{StateStore, update_game_data, fetch_game_data};
 
 
 #[function_component(TopMenu)]
 pub fn top_menu() -> Html {
     let (store, dispatch) = use_store::<StateStore>();
+    let navigator = use_navigator().unwrap();
 
-    fn home_callback(e: MouseEvent) {
-        e.prevent_default();
-        info!("Home clicked");
-    }
+    let home_callback = {
+        let navigator = navigator.clone();
+        Callback::from(move |e: MouseEvent| {
+            e.prevent_default();
+            info!("Home clicked");
+            navigator.push(&Route::Home);
+        })
+    };
 
-    fn about_callback(e: MouseEvent) {
-        e.prevent_default();
-        info!("About clicked");
-    }
+    let about_callback = {
+        let navigator = navigator.clone();
+        Callback::from(move |e: MouseEvent| {
+            e.prevent_default();
+            info!("About clicked");
+            navigator.push(&Route::About);
+        })
+    };
 
     let reset_callback = {
         let dispatch = dispatch.clone();
