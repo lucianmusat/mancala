@@ -48,10 +48,10 @@ def get_session_state(sessionid: str) -> dict:
     """
     Get the session state from redis.
     :param sessionid: The session id
+    :return: The session state as a dictionary
     """
     session_state = redis.get(sessionid)
     if session_state:
-        # print(f"Found session state: {pickle.loads(session_state)} for id {sessionid}")
         return pickle.loads(session_state)
     return {}
 
@@ -71,7 +71,6 @@ def default_session_state(sessionid: str, difficulty: str) -> dict:
             1: app.players[1]
         }
     }
-    print(f"Setting default session state: {ret}")
     return ret
 
 
@@ -98,9 +97,9 @@ def generate_response(sessionid: str) -> dict:
 @app.get("/")
 def index(sessionid: str = Query(default="")):
     """
-    Main index Api call. Generates a new session id.
+    Main index api call.
     :param sessionid: Session id to use in case of a continued game
-    :return: TemplateResponse that will render the landing page
+    :return: The game's state
     """
     if not sessionid:
         print("Could not find previous session id, creating a new one")
@@ -131,7 +130,6 @@ def index(sessionid: str = Query(default="")):
             }
         }
     }
-    print(f"Response: {response}")
     return response
 
 
@@ -145,7 +143,7 @@ def pit_selected(userid: int = Query(ge=0, le=1),
     :param userid: Which user made the choice
     :param pit: Chosen pit index from the user's pit list
     :param sessionid: Session id to use
-    :return: TemplateResponse that will render the board with the new data
+    :return: The new game's state
     """
     session_state = get_session_state(sessionid)
     assert len(session_state), "Session not found!"
@@ -158,7 +156,6 @@ def pit_selected(userid: int = Query(ge=0, le=1),
         session_state['winner'] = session_state['board'].winner
     redis.setex(sessionid, timedelta(hours=REDIS_EXPIRATION_HOURS), pickle.dumps(session_state))
     response = generate_response(sessionid)
-    print(f"Response: {response}")
     return response
 
 
@@ -179,16 +176,11 @@ def reset(sessionid: str = Query(default=""), difficulty: int = Query(ge=0, le=1
     app.winner = NO_WINNER
     app.difficulty = difficulty
     if difficulty == 0:
-        print("Using AI easy")
         app.players[1] = RandomPlayer(1, app.board)
     else:
-        print("Using AI hard")
         app.players[1] = MiniMaxPlayer(1, app.board)
-
     session_state = default_session_state(sessionid, str(difficulty))
     redis.setex(sessionid, timedelta(hours=REDIS_EXPIRATION_HOURS), pickle.dumps(session_state))
-    # print(f"Set to redis {session_state}")
-    print(f"Generated response: {generate_response(sessionid)}")
     return generate_response(sessionid)
 
 
