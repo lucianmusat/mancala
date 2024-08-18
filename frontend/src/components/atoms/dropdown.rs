@@ -141,9 +141,9 @@ pub fn dropdown(_props: &Props) -> Html {
                                 match fetch_game_data(Some(session_id)).await {
                                     Ok(data) => {
                                         update_game_data(&dispatch, data.clone());
-                                        debug!("Game data fetched successfully: {}", data.session_id);
+                                        debug!("Game data refetched successfully: {}", data.session_id);
                                     },
-                                    Err(err) => error!("Failed to fetch game data: {}", err),
+                                    Err(err) => error!("Failed to refetch game data: {}", err),
                                 }
                             });
                         },

@@ -11,8 +11,11 @@ pub fn status() -> Html {
 
     let style = Style::new(css!(
         r#"
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
             height: 200px;
-            width: 400px;
             margin-bottom: 20px;
             margin-top: 10px;
             text-align: center;
