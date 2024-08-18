@@ -117,7 +117,7 @@ def index(sessionid: str = Query(default="")):
 
     response = {
         "session_id": sessionid,
-        "difficulty": app.difficulty,
+        "difficulty": str(app.difficulty),
         "turn": "0",
         "winner": None,
         "players": {
