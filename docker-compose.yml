@@ -1,9 +1,13 @@
-version: "3.9"
 services:
   web:
     build: .
     ports:
-      - "8001:8001"
+      - "8001:8001" # Frontend port
+      - "8080:8080"
+    volumes:
+      - .:/code
+    environment:
+      - RUST_LOG=info  # Optional: Set Rust log level
   cache:
     image: redis:6.2-alpine
     hostname: redis

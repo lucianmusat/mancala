@@ -11,7 +11,7 @@ from random_player import RandomPlayer
 from minimax_player import MiniMaxPlayer
 from board import Board, NO_WINNER
 
-REDIS_HOST = 'localhost'
+REDIS_HOST = 'redis'
 REDIS_PORT = 6379
 REDIS_EXPIRATION_HOURS = 72
 
@@ -25,10 +25,9 @@ app = FastAPI(
     description="A basic implementation of the Mancala game",
 )
 
-# CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:8080"],
+    allow_origins=["http://127.0.0.1:8001"],
     allow_credentials=True,
     allow_methods=["GET"],
     allow_headers=["*"],
@@ -165,7 +164,7 @@ def reset(sessionid: str = Query(default=""), difficulty: int = Query(ge=0, le=1
     Reset the game to it's initial state.
     :param sessionid: Session id to use
     :param difficulty: Difficulty level of the AI (0 easy, 1 hard)
-    :return: TemplateResponse that will render the freshly reset board
+    :return: New game's session state
     """
     app.board.reset()
     app.players = {

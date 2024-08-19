@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 
-export PYTHONPATH=$(pwd)/..
-pytest . $1
+PYTHONPATH=$(pwd)/..
+export PYTHONPATH
+pytest . "$1"
