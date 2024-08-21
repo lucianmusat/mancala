@@ -1,5 +1,5 @@
-#FROM arm32v7/python:3.10.14-slim
-FROM python:3.10.14-slim
+FROM arm32v7/python:3.10.14-slim
+#FROM python:3.10.14-slim
 
 WORKDIR /code
 
