@@ -46,7 +46,6 @@ class Board:
         :return: True if the move was successful, False otherwise or if the game is over,
         or if the player has no stones in the selected pit, or if the same player can go again.
         """
-        print(f"Player {player} moving from pit {pit}")
         if not self.is_valid_pit(pit) or not self.has_available_stones(self.players_data[player], pit):
             return False
         available_stones = self.players_data[player].pits[pit]

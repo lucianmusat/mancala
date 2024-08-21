@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use yew::{ToHtml, Html, html};
 
-pub(crate) const BACKEND_URL: &str = "http://localhost:8000";
+pub(crate) const BACKEND_URL: &str = "http://127.0.0.1:8080";
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub enum PlayerType {

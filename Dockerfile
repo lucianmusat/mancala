@@ -39,5 +39,4 @@ WORKDIR /code
 COPY start.sh /code/start.sh
 RUN chmod +x /code/start.sh
 
-# Run both backend and frontend
-CMD ["/code/start.sh"]
+ENTRYPOINT ["bash", "/code/start.sh"]

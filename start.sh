@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Start the backend
-uvicorn main:app --proxy-headers --host 0.0.0.0 --port 8000 &
+uvicorn main:app --proxy-headers --host 0.0.0.0 --port 8080 &
 
 # Start the frontend
 cd /code/frontend && trunk serve --release --address 0.0.0.0 --port 8001
