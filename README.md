@@ -24,4 +24,4 @@ still has stones in his pits keeps them and puts them in his big pit. The winner
 the game is the player who has the most stones in his big pit.
 
 ### TODO:
- - [ ] Add client side rendering
+ - [X] Add client side rendering (Client side rendering is added using Rust and WebAssembly - Yew framework)
