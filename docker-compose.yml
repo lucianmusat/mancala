@@ -2,8 +2,7 @@ services:
   game:
     build: .
     ports:
-      - "8001:8001" # Frontend
-      - "8080:8080"
+      - "8001:8001" 
     volumes:
       - .:/code
     environment:
@@ -16,11 +15,5 @@ services:
     restart: always
     ports:
       - '6379:6379'
-# --save in care we want to persist data to disk
-#    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
     command: redis-server --loglevel warning
-#    volumes:
-#      - cache:/data
-#volumes:
-#  cache:
-#    driver: local
+

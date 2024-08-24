@@ -30,7 +30,9 @@ COPY ./frontend /code/frontend
 # Build frontend
 WORKDIR /code/frontend
 RUN cargo build --release
-RUN trunk build --release
+# RUN trunk build --release
+RUN cargo install wasm-bindgen-cli --version 0.2.92 
+
 
 # Move back to the main code directory
 WORKDIR /code
