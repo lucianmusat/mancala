@@ -27,7 +27,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:8001"],
+    allow_origins=["http://localhost:8001", "http://mancala.lucianmusat.nl"],
     allow_credentials=True,
     allow_methods=["GET"],
     allow_headers=["*"],
@@ -93,7 +93,7 @@ def generate_response(sessionid: str) -> dict:
     }
 
 
-@app.get("/")
+@app.get("/api/")
 def index(sessionid: str = Query(default="")):
     """
     Main index api call.
@@ -132,7 +132,7 @@ def index(sessionid: str = Query(default="")):
     return response
 
 
-@app.get("/select/")
+@app.get("/api/select/")
 def pit_selected(userid: int = Query(ge=0, le=1),
                  pit: int = Query(ge=0, le=5),
                  sessionid: str = Query(default="")):
@@ -158,7 +158,7 @@ def pit_selected(userid: int = Query(ge=0, le=1),
     return response
 
 
-@app.get("/reset")
+@app.get("/api/reset")
 def reset(sessionid: str = Query(default=""), difficulty: int = Query(ge=0, le=1)):
     """
     Reset the game to it's initial state.
