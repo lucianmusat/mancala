@@ -1,6 +1,6 @@
 # Mancala Game
 
-Can be played online [here](http://mancala.lucianmusat.nl/).
+Can be played online [here](http://mancala.lucianmusat.nl/). It's self-hosted, so might not be available all the time.
 
 ![How it looks](screenshot.png)
 
