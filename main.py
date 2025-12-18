@@ -16,7 +16,7 @@ from random_player import RandomPlayer
 from minimax_player import MiniMaxPlayer
 from board import Board, NO_WINNER
 
-REDIS_HOST = '0.0.0.0'
+REDIS_HOST = 'redis'
 REDIS_PORT = 6379
 REDIS_EXPIRATION_HOURS = 72
 STATIC_DIR = Path(__file__).parent / "static"
@@ -34,8 +34,6 @@ app = FastAPI(
     title="Lucian's Mancala Game",
     description="A basic implementation of the Mancala game",
 )
-
-# app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 app.add_middleware(
     CORSMiddleware,
@@ -108,9 +106,6 @@ def generate_response(sessionid: str) -> dict:
         }
     }
 
-# @app.get("/", include_in_schema=False)
-# def frontend_index():
-#     return FileResponse(str(INDEX_HTML))
 
 @app.get("/api/")
 def index(sessionid: str = Query(default="")):
@@ -202,7 +197,6 @@ def reset(sessionid: str = Query(default=""), difficulty: int = Query(ge=0, le=1
     return generate_response(sessionid)
 
 
-# Mount static files to serve .js, .wasm, .css, etc.
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/", include_in_schema=False)

@@ -2,5 +2,6 @@
 public_url = "/static/"
 no_sri = true
 
-[copy]
-dir = "static"
+[[copy]]
+source = "static"
+dest = "."
