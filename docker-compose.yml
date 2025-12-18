@@ -3,7 +3,6 @@ services:
     build: .
     ports:
       - "8001:8001" 
-      - "8808:8808"
     volumes:
       - .:/code
     environment:
