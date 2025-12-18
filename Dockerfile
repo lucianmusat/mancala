@@ -31,4 +31,4 @@ RUN sed -i 's/\r$//' /code/start.sh  # might build on windows
 RUN chmod +x /code/start.sh
 RUN chmod +x /code/start.sh
 
-ENTRYPOINT ["bash", "/code/start.sh"]
+ENTRYPOINT ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001", "--proxy-headers"]
