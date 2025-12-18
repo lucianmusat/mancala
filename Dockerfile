@@ -16,7 +16,7 @@ RUN trunk build --release
 
 
 # ---------- Backend/runtime stage ----------
-FROM python:3.10.14-slim AS runtime
+FROM python:3.12.12-slim AS runtime
 WORKDIR /code
 
 COPY requirements.txt /code/requirements.txt

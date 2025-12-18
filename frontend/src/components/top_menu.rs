@@ -3,7 +3,7 @@ use yew_router::prelude::*;
 use web_sys::MouseEvent;
 use crate::components::atoms::menu_button::MenuButton;
 use crate::components::atoms::dropdown::Dropdown;
-use log::{info, error};
+use log::error;
 use yewdux::prelude::*;
 use reqwasm::http::Request;
 use crate::common::types::{BACKEND_URL};

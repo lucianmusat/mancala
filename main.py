@@ -9,7 +9,6 @@ from fastapi.staticfiles import StaticFiles
 from datetime import timedelta
 from uuid import uuid4
 import redis
-import asyncio
 import pickle
 
 from human_player import HumanPlayer
@@ -17,7 +16,7 @@ from random_player import RandomPlayer
 from minimax_player import MiniMaxPlayer
 from board import Board, NO_WINNER
 
-REDIS_HOST = 'redis'
+REDIS_HOST = '0.0.0.0'
 REDIS_PORT = 6379
 REDIS_EXPIRATION_HOURS = 72
 STATIC_DIR = Path(__file__).parent / "static"
@@ -29,33 +28,21 @@ redis = redis.Redis(
     socket_connect_timeout=1,
     socket_timeout=1
 )
+assert redis.ping()
 
 app = FastAPI(
     title="Lucian's Mancala Game",
     description="A basic implementation of the Mancala game",
 )
 
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
-
-@app.on_event("startup")
-async def wait_for_redis():
-    for i in range(30):
-        try:
-            ok = await asyncio.to_thread(redis.ping)
-            if ok:
-                logging.info("Redis reachable")
-                return
-        except Exception as e:
-            logging.warn(f"Redis not reachable yet: {e!r}")
-            await asyncio.sleep(1)
-    raise RuntimeError("Redis not reachable after retries")
+# app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://mancala.lucianmusat.nl",
         "https://mancala.lucianmusat.nl",
-        "http://localhost:8808",
+        "http://localhost:8001",
     ],
     allow_credentials=True,
     allow_methods=["GET"],
@@ -121,18 +108,9 @@ def generate_response(sessionid: str) -> dict:
         }
     }
 
-@app.get("/", include_in_schema=False)
-def frontend_index():
-    return FileResponse(str(INDEX_HTML))
-
-# SPA fallback: any route that isn't /api or /assets should return index.html
-@app.get("/{full_path:path}", include_in_schema=False)
-def frontend_spa_fallback(full_path: str):
-    if full_path.startswith("api/") or full_path == "api":
-        raise HTTPException(status_code=404, detail="Not found")
-    if full_path.startswith("assets/") or full_path == "assets":
-        raise HTTPException(status_code=404, detail="Not found")
-    return FileResponse(str(INDEX_HTML))
+# @app.get("/", include_in_schema=False)
+# def frontend_index():
+#     return FileResponse(str(INDEX_HTML))
 
 @app.get("/api/")
 def index(sessionid: str = Query(default="")):
@@ -173,7 +151,7 @@ def index(sessionid: str = Query(default="")):
     return response
 
 
-@app.get("/api/select/")
+@app.get("/api/select")
 def pit_selected(userid: int = Query(ge=0, le=1),
                  pit: int = Query(ge=0, le=5),
                  sessionid: str = Query(default="")):
@@ -223,6 +201,20 @@ def reset(sessionid: str = Query(default=""), difficulty: int = Query(ge=0, le=1
     redis.setex(sessionid, timedelta(hours=REDIS_EXPIRATION_HOURS), pickle.dumps(session_state))
     return generate_response(sessionid)
 
+
+# Mount static files to serve .js, .wasm, .css, etc.
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.get("/", include_in_schema=False)
+def frontend_index():
+    return FileResponse(str(INDEX_HTML))
+
+# SPA fallback: serve index.html for any non-API, non-static routes
+@app.get("/{full_path:path}", include_in_schema=False)
+def frontend_spa_fallback(full_path: str):
+    if full_path.startswith("api/") or full_path.startswith("static/"):
+        raise HTTPException(status_code=404, detail="Not found")
+    return FileResponse(str(INDEX_HTML))
 
 @app.exception_handler(status.HTTP_404_NOT_FOUND)
 async def not_found_handler(request: Request, exc):

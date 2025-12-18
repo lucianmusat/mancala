@@ -1,4 +1,5 @@
 [build]
+public_url = "/static/"
 no_sri = true
 
 [copy]
