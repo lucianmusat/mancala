@@ -153,7 +153,7 @@ pub fn main_board(props: &Props) -> Html {
 
 async fn fetch_move(session_id: Uuid, player_type: PlayerType,  pit_id: u32) -> Result<GameData, Error> {
     debug!("Fetching move...");
-    let url = format!("{}/select?userid={}&sessionid={}&pit={}", BACKEND_URL, player_type as u32, session_id, pit_id);
+    let url = format!("{}select?userid={}&sessionid={}&pit={}", BACKEND_URL, player_type as u32, session_id, pit_id);
     let response = Request::get(&url)
         .send()
         .await

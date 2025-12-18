@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use yew::{ToHtml, Html, html};
 
-pub(crate) const BACKEND_URL: &str = "http://mancala.lucianmusat.nl/api";
+pub(crate) const BACKEND_URL: &str = "/api";
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub enum PlayerType {

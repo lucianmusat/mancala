@@ -1,2 +1,5 @@
+[build]
+no_sri = true
+
 [copy]
 dir = "static"

@@ -1,5 +1,10 @@
+import logging
+
 from fastapi import FastAPI, Request, status, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pathlib import Path
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from datetime import timedelta
 from uuid import uuid4
@@ -15,29 +20,43 @@ from board import Board, NO_WINNER
 REDIS_HOST = 'redis'
 REDIS_PORT = 6379
 REDIS_EXPIRATION_HOURS = 72
+STATIC_DIR = Path(__file__).parent / "static"
+INDEX_HTML = STATIC_DIR / "index.html"
 
 redis = redis.Redis(
     host=REDIS_HOST,
-    port=REDIS_PORT)
+    port=REDIS_PORT,
+    socket_connect_timeout=1,
+    socket_timeout=1
+)
 
 app = FastAPI(
     title="Lucian's Mancala Game",
     description="A basic implementation of the Mancala game",
 )
 
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
+
 @app.on_event("startup")
 async def wait_for_redis():
-    for i in range(30):  # ~30 seconds
+    for i in range(30):
         try:
-            if redis.ping():
+            ok = await asyncio.to_thread(redis.ping)
+            if ok:
+                logging.info("Redis reachable")
                 return
-        except Exception:
+        except Exception as e:
+            logging.warn(f"Redis not reachable yet: {e!r}")
             await asyncio.sleep(1)
     raise RuntimeError("Redis not reachable after retries")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8001", "http://mancala.lucianmusat.nl"],
+    allow_origins=[
+        "http://mancala.lucianmusat.nl",
+        "https://mancala.lucianmusat.nl",
+        "http://localhost:8808",
+    ],
     allow_credentials=True,
     allow_methods=["GET"],
     allow_headers=["*"],
@@ -102,6 +121,18 @@ def generate_response(sessionid: str) -> dict:
         }
     }
 
+@app.get("/", include_in_schema=False)
+def frontend_index():
+    return FileResponse(str(INDEX_HTML))
+
+# SPA fallback: any route that isn't /api or /assets should return index.html
+@app.get("/{full_path:path}", include_in_schema=False)
+def frontend_spa_fallback(full_path: str):
+    if full_path.startswith("api/") or full_path == "api":
+        raise HTTPException(status_code=404, detail="Not found")
+    if full_path.startswith("assets/") or full_path == "assets":
+        raise HTTPException(status_code=404, detail="Not found")
+    return FileResponse(str(INDEX_HTML))
 
 @app.get("/api/")
 def index(sessionid: str = Query(default="")):
@@ -194,6 +225,9 @@ def reset(sessionid: str = Query(default=""), difficulty: int = Query(ge=0, le=1
 
 
 @app.exception_handler(status.HTTP_404_NOT_FOUND)
+async def not_found_handler(request: Request, exc):
+    return JSONResponse(status_code=404, content={"detail": "Not found"})
+
 @app.exception_handler(status.HTTP_422_UNPROCESSABLE_ENTITY)
-def http_exception_handler():
-    raise HTTPException(status_code=404, detail="Item not found")
+async def validation_handler(request: Request, exc):
+    return JSONResponse(status_code=422, content={"detail": "Validation error", "errors": exc.errors()})

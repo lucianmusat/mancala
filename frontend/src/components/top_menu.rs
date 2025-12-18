@@ -20,7 +20,6 @@ pub fn top_menu() -> Html {
         let navigator = navigator.clone();
         Callback::from(move |e: MouseEvent| {
             e.prevent_default();
-            info!("Home clicked");
             navigator.push(&Route::Home);
         })
     };
@@ -29,7 +28,6 @@ pub fn top_menu() -> Html {
         let navigator = navigator.clone();
         Callback::from(move |e: MouseEvent| {
             e.prevent_default();
-            info!("About clicked");
             navigator.push(&Route::About);
         })
     };
@@ -47,7 +45,6 @@ pub fn top_menu() -> Html {
                 wasm_bindgen_futures::spawn_local(async move {
                     match Request::get(&url).send().await {
                         Ok(_) => {
-                            info!("Reset successful");
                             match fetch_game_data(Some(game_data.unwrap().session_id.clone())).await {
                                 Ok(new_data) => update_game_data(&dispatch, new_data),
                                 Err(err) => log::error!("Failed to fetch new game data: {}", err),
