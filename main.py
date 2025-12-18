@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import timedelta
 from uuid import uuid4
 import redis
+import asyncio
 import pickle
 
 from human_player import HumanPlayer
@@ -18,12 +19,21 @@ REDIS_EXPIRATION_HOURS = 72
 redis = redis.Redis(
     host=REDIS_HOST,
     port=REDIS_PORT)
-assert redis.ping()
 
 app = FastAPI(
     title="Lucian's Mancala Game",
     description="A basic implementation of the Mancala game",
 )
+
+@app.on_event("startup")
+async def wait_for_redis():
+    for i in range(30):  # ~30 seconds
+        try:
+            if redis.ping():
+                return
+        except Exception:
+            await asyncio.sleep(1)
+    raise RuntimeError("Redis not reachable after retries")
 
 app.add_middleware(
     CORSMiddleware,
