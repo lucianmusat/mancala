@@ -26,9 +26,4 @@ RUN pip install --no-cache-dir --upgrade pip \
 COPY ./*.py /code/
 COPY --from=frontend-build /app/frontend/dist /code/static
 
-COPY start.sh /code/start.sh
-RUN sed -i 's/\r$//' /code/start.sh  # might build on windows
-RUN chmod +x /code/start.sh
-RUN chmod +x /code/start.sh
-
 ENTRYPOINT ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001", "--proxy-headers"]
