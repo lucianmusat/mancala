@@ -4,7 +4,7 @@ use yew::Html;
 
 
 #[styled_component(NotFound)]
-pub fn status() -> Html {
+pub fn not_found() -> Html {
     let style = Style::new(css!(
         r#"
             display: flex;

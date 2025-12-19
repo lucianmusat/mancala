@@ -25,3 +25,6 @@ the game is the player who has the most stones in his big pit.
 
 ### TODO:
  - [X] Add client side rendering (Client side rendering is added using Rust and WebAssembly - Yew framework)
+ - [ ] Add POST endpoint for session generation, store in local storage
+ - [ ] Refactor the routing
+ - [ ] Add expiring map for sessions, instead of using Redis

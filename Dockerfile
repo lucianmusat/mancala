@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential pkg-config libssl-dev ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-# Use --locked so you get reproducible installs and avoid surprise dependency bumps
+# Use --locked to avoid surprise dependency bumps
 RUN cargo install trunk --locked \
  && rustup target add wasm32-unknown-unknown
 

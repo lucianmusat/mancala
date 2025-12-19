@@ -1,7 +1,7 @@
 use anyhow::Error;
 use reqwasm::http::Request;
 use yewdux::prelude::*;
-use crate::common::types::{BACKEND_URL, GameData};
+use crate::common::types::GameData;
 use serde::{Serialize, Deserialize};
 use uuid::Uuid;
 use web_sys::window;

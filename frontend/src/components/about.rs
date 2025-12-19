@@ -4,7 +4,7 @@ use yew::Html;
 
 
 #[styled_component(About)]
-pub fn status() -> Html {
+pub fn about() -> Html {
     let style = Style::new(css!(
         r#"
             .about-container {
@@ -43,7 +43,7 @@ pub fn status() -> Html {
     html! {
         <div class={style}>
             <div class="about-container">
-                <img src="static/mancala.jpg" alt="Mancala Image" />
+                <img src="/static/static/mancala.jpg" alt="Mancala Image" />
                 <p>
                     {"This little project started from a job application code challenge that I received."} <br />{"I was given a day to complete
                     it, and it wasn't very good upon completion, but I liked working on it, so I decided to continue in my spare time."}

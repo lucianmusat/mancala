@@ -16,7 +16,7 @@ from random_player import RandomPlayer
 from minimax_player import MiniMaxPlayer
 from board import Board, NO_WINNER
 
-REDIS_HOST = 'redis'
+REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
 REDIS_EXPIRATION_HOURS = 72
 STATIC_DIR = Path(__file__).parent / "static"
@@ -204,11 +204,22 @@ def frontend_index():
     return FileResponse(str(INDEX_HTML))
 
 # SPA fallback: serve index.html for any non-API, non-static routes
-@app.get("/{full_path:path}", include_in_schema=False)
-def frontend_spa_fallback(full_path: str):
-    if full_path.startswith("api/") or full_path.startswith("static/"):
+@app.get("/{path:path}", include_in_schema=False)
+def spa_fallback(path: str):
+    # Let API routes behave normally
+    if path.startswith("api"):
         raise HTTPException(status_code=404, detail="Not found")
-    return FileResponse(str(INDEX_HTML))
+
+    # Let static files be handled by StaticFiles
+    if path.startswith("static"):
+        raise HTTPException(status_code=404, detail="Not found")
+
+    # If it looks like a real file (has an extension), 404
+    if "." in path.split("/")[-1]:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    # Otherwise: SPA route
+    return FileResponse("static/index.html")
 
 @app.exception_handler(status.HTTP_404_NOT_FOUND)
 async def not_found_handler(request: Request, exc):
