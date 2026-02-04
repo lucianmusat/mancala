@@ -2,18 +2,21 @@ services:
   game:
     build: .
     ports:
-      - "8001:8001" 
+      - "8001:8001"
     volumes:
       - .:/code
     environment:
       - RUST_LOG=info
+      - CASSANDRA_CONTACT_POINTS=cassandra
+      - CASSANDRA_PORT=9042
+      - CASSANDRA_KEYSPACE=mancala
+      - SESSION_TTL_HOURS=72
     depends_on:
-      - cache
-  cache:
-    image: redis:6.2-alpine
-    hostname: redis
+      - cassandra
+
+  cassandra:
+    image: cassandra:4.1
+    hostname: cassandra
     restart: always
     ports:
-      - '6379:6379'
-    command: redis-server --loglevel warning
-
+      - "9042:9042"
