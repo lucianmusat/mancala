@@ -1,57 +1,29 @@
 import logging
+import os
+import pickle
+from pathlib import Path
+from uuid import uuid4
+
+from cachetools import TTLCache
 
 from fastapi import FastAPI, Request, status, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pathlib import Path
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-
-from uuid import uuid4
-import os
-import pickle
-
-from cassandra.cluster import Cluster
 
 from human_player import HumanPlayer
 from random_player import RandomPlayer
 from minimax_player import MiniMaxPlayer
 from board import Board, NO_WINNER
 
-# Cassandra config
-CASSANDRA_CONTACT_POINTS = os.getenv("CASSANDRA_CONTACT_POINTS", "cassandra").split(",")
-CASSANDRA_PORT = int(os.getenv("CASSANDRA_PORT", "9042"))
-CASSANDRA_KEYSPACE = os.getenv("CASSANDRA_KEYSPACE", "mancala")
+# In-process session store (single replica app)
 SESSION_TTL_HOURS = int(os.getenv("SESSION_TTL_HOURS", "72"))
+SESSION_CACHE_MAXSIZE = int(os.getenv("SESSION_CACHE_MAXSIZE", "10000"))
+
+_session_cache = TTLCache(maxsize=SESSION_CACHE_MAXSIZE, ttl=SESSION_TTL_HOURS * 3600)
 
 STATIC_DIR = Path(__file__).parent / "static"
 INDEX_HTML = STATIC_DIR / "index.html"
-
-_cluster = Cluster(CASSANDRA_CONTACT_POINTS, port=CASSANDRA_PORT)
-_cassandra = _cluster.connect()
-
-# Ensure schema exists (safe for a small app; idempotent)
-_cassandra.execute(
-    f"""
-    CREATE KEYSPACE IF NOT EXISTS {CASSANDRA_KEYSPACE}
-    WITH replication = {{'class': 'SimpleStrategy', 'replication_factor': 1}};
-    """
-)
-_cassandra.set_keyspace(CASSANDRA_KEYSPACE)
-_cassandra.execute(
-    """
-    CREATE TABLE IF NOT EXISTS game_sessions (
-      session_id text PRIMARY KEY,
-      state blob,
-      updated_at timestamp
-    );
-    """
-)
-
-_stmt_get = _cassandra.prepare("SELECT state FROM game_sessions WHERE session_id=?")
-_stmt_set = _cassandra.prepare(
-    "INSERT INTO game_sessions (session_id, state, updated_at) VALUES (?, ?, toTimestamp(now())) USING TTL ?"
-)
-
 
 app = FastAPI(
     title="Lucian's Mancala Game",
@@ -81,18 +53,16 @@ app.difficulty = 0
 
 
 def get_session_state(sessionid: str) -> dict:
-    """Get the session state from Cassandra."""
-    row = _cassandra.execute(_stmt_get, (sessionid,)).one()
-    if row and row.state:
-        return pickle.loads(row.state)
-    return {}
+    """Get the session state from an in-memory TTL cache."""
+    payload = _session_cache.get(sessionid)
+    if payload is None:
+        return {}
+    return pickle.loads(payload)
 
 
 def set_session_state(sessionid: str, session_state: dict) -> None:
-    """Persist session state to Cassandra with a TTL."""
-    ttl_seconds = SESSION_TTL_HOURS * 3600
-    payload = pickle.dumps(session_state)
-    _cassandra.execute(_stmt_set, (sessionid, payload, ttl_seconds))
+    """Persist session state to an in-memory TTL cache."""
+    _session_cache[sessionid] = pickle.dumps(session_state)
 
 
 def default_session_state(sessionid: str, difficulty: str) -> dict:
@@ -131,16 +101,54 @@ def generate_response(sessionid: str) -> dict:
 def index(sessionid: str = Query(default="")):
     """Main index api call."""
     if not sessionid:
-        logging.info("Could not find previous session id, creating a new one")
+        logging.info("No session id provided; creating a new one")
         sessionid = str(uuid4())
         set_session_state(sessionid, default_session_state(sessionid, "0"))
-    else:
-        session_state = get_session_state(sessionid)
-        app.board = session_state["board"]
-        app.players = session_state["players"]
-        app.winner = session_state["winner"]
-        app.turn = session_state["turn"]
-        app.difficulty = session_state["difficulty"]
+        return {
+            "session_id": sessionid,
+            "difficulty": str(app.difficulty),
+            "turn": "0",
+            "winner": None,
+            "players": {
+                0: {
+                    "big_pit": app.board.players_data[0].big_pit,
+                    "pits": app.players[0].board.players_data[0].pits,
+                },
+                1: {
+                    "big_pit": app.board.players_data[1].big_pit,
+                    "pits": app.players[1].board.players_data[1].pits,
+                },
+            },
+        }
+
+    session_state = get_session_state(sessionid)
+    if not session_state:
+        # Session expired / not found: create a new one and return it.
+        logging.info("Session %s not found/expired; creating a new one", sessionid)
+        sessionid = str(uuid4())
+        set_session_state(sessionid, default_session_state(sessionid, "0"))
+        return {
+            "session_id": sessionid,
+            "difficulty": str(app.difficulty),
+            "turn": "0",
+            "winner": None,
+            "players": {
+                0: {
+                    "big_pit": app.board.players_data[0].big_pit,
+                    "pits": app.players[0].board.players_data[0].pits,
+                },
+                1: {
+                    "big_pit": app.board.players_data[1].big_pit,
+                    "pits": app.players[1].board.players_data[1].pits,
+                },
+            },
+        }
+
+    app.board = session_state["board"]
+    app.players = session_state["players"]
+    app.winner = session_state["winner"]
+    app.turn = session_state["turn"]
+    app.difficulty = session_state["difficulty"]
 
     return {
         "session_id": sessionid,
@@ -168,7 +176,8 @@ def pit_selected(
 ):
     """Api call upon selecting a pit to play from."""
     session_state = get_session_state(sessionid)
-    assert len(session_state), "Session not found!"
+    if not session_state:
+        raise HTTPException(status_code=404, detail="Session not found")
 
     if not session_state["board"].game_over():
         if isinstance(session_state["players"][userid], HumanPlayer):
@@ -185,6 +194,9 @@ def pit_selected(
 @app.get("/api/reset")
 def reset(sessionid: str = Query(default=""), difficulty: int = Query(ge=0, le=1)):
     """Reset the game to it's initial state."""
+    if not sessionid:
+        sessionid = str(uuid4())
+
     app.board.reset()
     app.players = {
         0: HumanPlayer(0, app.board),

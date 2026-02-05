@@ -3,20 +3,9 @@ services:
     build: .
     ports:
       - "8001:8001"
+      - "8808:8808"
     volumes:
       - .:/code
     environment:
       - RUST_LOG=info
-      - CASSANDRA_CONTACT_POINTS=cassandra
-      - CASSANDRA_PORT=9042
-      - CASSANDRA_KEYSPACE=mancala
       - SESSION_TTL_HOURS=72
-    depends_on:
-      - cassandra
-
-  cassandra:
-    image: cassandra:4.1
-    hostname: cassandra
-    restart: always
-    ports:
-      - "9042:9042"

@@ -27,10 +27,10 @@ pub fn main_board(props: &Props) -> Html {
     {
         let fetched = fetched.clone();
         let dispatch = dispatch.clone();
-        let keep_session  = props.keep_session;
         use_effect(move || {
-            if !*fetched && !keep_session {
+            if !*fetched {
                 spawn_local(async move {
+                    // fetch_game_data(None) will try to resume a saved session id from localStorage.
                     match fetch_game_data(None).await {
                         Ok(data) => {
                             update_game_data(&dispatch, data.clone());

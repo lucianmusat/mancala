@@ -4,4 +4,4 @@ pydantic==2.7.1
 pytest==8.2.1
 uvicorn==0.29.0
 uuid==1.30
-cassandra-driver==3.29.2
+cachetools==5.5.2

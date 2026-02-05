@@ -6,6 +6,23 @@ use serde::{Serialize, Deserialize};
 use uuid::Uuid;
 use web_sys::window;
 
+const SESSION_ID_STORAGE_KEY: &str = "mancala_session_id";
+
+fn load_saved_session_id() -> Option<Uuid> {
+    let window = window()?;
+    let storage = window.local_storage().ok().flatten()?;
+    let value = storage.get_item(SESSION_ID_STORAGE_KEY).ok().flatten()?;
+    Uuid::parse_str(&value).ok()
+}
+
+fn save_session_id(id: &Uuid) {
+    if let Some(window) = window() {
+        if let Ok(Some(storage)) = window.local_storage() {
+            let _ = storage.set_item(SESSION_ID_STORAGE_KEY, &id.to_string());
+        }
+    }
+}
+
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize, Store)]
 pub struct StateStore {
     pub game_data: Option<GameData>
@@ -18,6 +35,9 @@ pub fn update_game_data(dispatch: &Dispatch<StateStore>, game_data: GameData) {
 }
 
 pub async fn fetch_game_data(sessionid: Option<Uuid>) -> Result<GameData, Error> {
+
+    // If caller didn't supply a session id, try to resume from browser storage.
+    let sessionid = sessionid.or_else(load_saved_session_id);
 
     let window = window()
         .ok_or_else(|| {
@@ -60,6 +80,9 @@ pub async fn fetch_game_data(sessionid: Option<Uuid>) -> Result<GameData, Error>
             log::error!("Failed to parse JSON: {}", err);
             anyhow::anyhow!("Failed to parse JSON: {}", err)
         })?;
+
+    // Persist session id for future visits.
+    save_session_id(&data.session_id);
 
     Ok(data)
 }
