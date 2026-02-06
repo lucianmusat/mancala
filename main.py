@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from cachetools import TTLCache
 
-from fastapi import FastAPI, Request, status, Query, HTTPException
+from fastapi import FastAPI, Request, status, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
@@ -39,7 +39,7 @@ app.add_middleware(
         "http://localhost:8001",
     ],
     allow_credentials=True,
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
@@ -125,26 +125,6 @@ def get_session(sessionid: str):
     return generate_response(sessionid)
 
 
-# Backwards-compatible endpoint: historically both fetched or implicitly created.
-@app.get("/api/")
-def index(sessionid: str = Query(default="")):
-    """Main index api call (legacy).
-
-    If sessionid is missing or expired, a new session is created.
-    """
-    if not sessionid:
-        logging.info("No session id provided; creating a new one (legacy /api/)")
-        return _create_new_session("0")
-
-    session_state = get_session_state(sessionid)
-    if not session_state:
-        logging.info("Session %s not found/expired; creating a new one (legacy /api/)", sessionid)
-        return _create_new_session("0")
-
-    # Ensure generate_response sees it.
-    return generate_response(sessionid)
-
-
 class SelectMoveRequest(BaseModel):
     userid: int
     pit: int
@@ -197,7 +177,6 @@ def _reset_session(sessionid: str, difficulty: int) -> dict:
 @app.post("/api/sessions/{sessionid}/select")
 def session_select(sessionid: str, payload: SelectMoveRequest):
     """Make a move within a session."""
-    # Extra safety: enforce expected ranges here too.
     if payload.userid not in (0, 1):
         raise HTTPException(status_code=422, detail="userid must be 0 or 1")
     if payload.pit < 0 or payload.pit > 5:
@@ -211,36 +190,6 @@ def session_reset(sessionid: str, payload: ResetRequest):
     if payload.difficulty not in (0, 1):
         raise HTTPException(status_code=422, detail="difficulty must be 0 or 1")
     return _reset_session(sessionid, payload.difficulty)
-
-
-# Legacy endpoints (querystring-based)
-@app.get("/api/select")
-def pit_selected(
-    userid: int = Query(ge=0, le=1),
-    pit: int = Query(ge=0, le=5),
-    sessionid: str = Query(default=""),
-):
-    """Legacy: Api call upon selecting a pit to play from."""
-    return _apply_move(sessionid, userid, pit)
-
-
-@app.get("/api/reset")
-def reset(sessionid: str = Query(default=""), difficulty: int = Query(ge=0, le=1)):
-    """Legacy: Reset the game to it's initial state.
-
-    Historically this created a new session if no sessionid was provided.
-    """
-    if not sessionid:
-        sessionid = str(uuid4())
-        set_session_state(sessionid, default_session_state(sessionid, str(difficulty)))
-        return generate_response(sessionid)
-
-    # If the session exists, reset it; otherwise keep old behavior of creating a new one.
-    if not get_session_state(sessionid):
-        set_session_state(sessionid, default_session_state(sessionid, str(difficulty)))
-        return generate_response(sessionid)
-
-    return _reset_session(sessionid, difficulty)
 
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
