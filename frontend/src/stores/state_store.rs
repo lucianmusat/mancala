@@ -39,50 +39,72 @@ pub async fn fetch_game_data(sessionid: Option<Uuid>) -> Result<GameData, Error>
     // If caller didn't supply a session id, try to resume from browser storage.
     let sessionid = sessionid.or_else(load_saved_session_id);
 
-    let window = window()
-        .ok_or_else(|| {
-            log::error!("Window object not available");
-            anyhow::anyhow!("Window object not available")
-        })?;
+    let window = window().ok_or_else(|| {
+        log::error!("Window object not available");
+        anyhow::anyhow!("Window object not available")
+    })?;
 
-    let location = window.location();
-    let origin = location.origin()
+    let origin = window
+        .location()
+        .origin()
         .map_err(|err| {
             log::error!("Failed to get origin: {:?}", err);
             anyhow::anyhow!("Failed to get window origin")
         })?;
-    
-    let mut url = format!("{}/api/", origin);
-    
-    if let Some(id) = sessionid {
-        url.push_str(&format!("?sessionid={}", id));
-    }
 
-    let response = Request::get(&url)
-        .send()
-        .await
-        .map_err(|err| {
+    // Try to fetch an existing session (if we have one). If it 404s, create a new one.
+    if let Some(id) = sessionid {
+        let url = format!("{}/api/sessions/{}", origin, id);
+        let response = Request::get(&url).send().await.map_err(|err| {
             log::error!("Request failed: {}", err);
             anyhow::anyhow!("Request failed: {}", err)
         })?;
 
+        if response.ok() {
+            let data = response.json::<GameData>().await.map_err(|err| {
+                log::error!("Failed to parse JSON: {}", err);
+                anyhow::anyhow!("Failed to parse JSON: {}", err)
+            })?;
+
+            save_session_id(&data.session_id);
+            return Ok(data);
+        }
+
+        if response.status() != 404 {
+            let status = response.status();
+            let text = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Failed to read response".to_string());
+            log::error!("HTTP error {}: {}", status, text);
+            return Err(anyhow::anyhow!("HTTP error {}: {}", status, text));
+        }
+
+        log::debug!("Session {} not found (404); creating a new session", id);
+    }
+
+    // No session id or session expired: create a new session.
+    let url = format!("{}/api/sessions", origin);
+    let response = Request::post(&url).send().await.map_err(|err| {
+        log::error!("Request failed: {}", err);
+        anyhow::anyhow!("Request failed: {}", err)
+    })?;
+
     if !response.ok() {
         let status = response.status();
-        let text = response.text().await.unwrap_or_else(|_| "Failed to read response".to_string());
+        let text = response
+            .text()
+            .await
+            .unwrap_or_else(|_| "Failed to read response".to_string());
         log::error!("HTTP error {}: {}", status, text);
         return Err(anyhow::anyhow!("HTTP error {}: {}", status, text));
     }
 
-    let data = response
-        .json::<GameData>()
-        .await
-        .map_err(|err| {
-            log::error!("Failed to parse JSON: {}", err);
-            anyhow::anyhow!("Failed to parse JSON: {}", err)
-        })?;
+    let data = response.json::<GameData>().await.map_err(|err| {
+        log::error!("Failed to parse JSON: {}", err);
+        anyhow::anyhow!("Failed to parse JSON: {}", err)
+    })?;
 
-    // Persist session id for future visits.
     save_session_id(&data.session_id);
-
     Ok(data)
 }

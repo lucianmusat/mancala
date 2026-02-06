@@ -5,6 +5,7 @@ use reqwasm::http::Request;
 use anyhow::Error;
 use uuid::Uuid;
 use log::{error, debug};
+use serde_json;
 use stylist::{yew::styled_component, Style};
 use yewdux::prelude::*;
 use wasm_bindgen_futures::spawn_local;
@@ -20,7 +21,7 @@ pub struct Props {
 }
 
 #[styled_component(MainBoard)]
-pub fn main_board(props: &Props) -> Html {
+pub fn main_board(_props: &Props) -> Html {
     let (store, dispatch) = use_store::<StateStore>();
     let fetched = use_state(|| false);
 
@@ -151,13 +152,27 @@ pub fn main_board(props: &Props) -> Html {
     }
 }
 
-async fn fetch_move(session_id: Uuid, player_type: PlayerType,  pit_id: u32) -> Result<GameData, Error> {
+async fn fetch_move(session_id: Uuid, player_type: PlayerType, pit_id: u32) -> Result<GameData, Error> {
     debug!("Fetching move...");
-    let url = format!("{}/select?userid={}&sessionid={}&pit={}", BACKEND_URL, player_type as u32, session_id, pit_id);
-    let response = Request::get(&url)
+
+    let url = format!("{}/sessions/{}/select", BACKEND_URL, session_id);
+    let body = serde_json::json!({
+        "userid": player_type as u32,
+        "pit": pit_id,
+    });
+
+    let response = Request::post(&url)
+        .header("Content-Type", "application/json")
+        .body(body.to_string())
         .send()
         .await
         .map_err(|err| anyhow::anyhow!("Request failed: {}", err))?;
+
+    if !response.ok() {
+        let status = response.status();
+        let text = response.text().await.unwrap_or_default();
+        return Err(anyhow::anyhow!("HTTP error {}: {}", status, text));
+    }
 
     let data = response
         .json::<GameData>()

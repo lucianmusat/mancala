@@ -7,6 +7,7 @@ from uuid import uuid4
 from cachetools import TTLCache
 
 from fastapi import FastAPI, Request, status, Query, HTTPException
+from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -79,6 +80,9 @@ def default_session_state(sessionid: str, difficulty: str) -> dict:
 
 def generate_response(sessionid: str) -> dict:
     session_state = get_session_state(sessionid)
+    if not session_state:
+        raise HTTPException(status_code=404, detail="Session not found")
+
     return {
         "session_id": sessionid,
         "difficulty": str(session_state["difficulty"]),
@@ -97,84 +101,60 @@ def generate_response(sessionid: str) -> dict:
     }
 
 
+def _create_new_session(difficulty: str = "0") -> dict:
+    """Create a new session and return the initial game state payload."""
+    sessionid = str(uuid4())
+    set_session_state(sessionid, default_session_state(sessionid, difficulty))
+    return generate_response(sessionid)
+
+
+@app.post("/api/sessions", status_code=status.HTTP_201_CREATED)
+def create_session():
+    """Create a new session.
+
+    Frontend should call this when no session id exists locally or when an existing
+    session id returns 404 (expired / not found).
+    """
+    logging.info("Creating a new session")
+    return _create_new_session("0")
+
+
+@app.get("/api/sessions/{sessionid}")
+def get_session(sessionid: str):
+    """Fetch an existing session state."""
+    return generate_response(sessionid)
+
+
+# Backwards-compatible endpoint: historically both fetched or implicitly created.
 @app.get("/api/")
 def index(sessionid: str = Query(default="")):
-    """Main index api call."""
+    """Main index api call (legacy).
+
+    If sessionid is missing or expired, a new session is created.
+    """
     if not sessionid:
-        logging.info("No session id provided; creating a new one")
-        sessionid = str(uuid4())
-        set_session_state(sessionid, default_session_state(sessionid, "0"))
-        return {
-            "session_id": sessionid,
-            "difficulty": str(app.difficulty),
-            "turn": "0",
-            "winner": None,
-            "players": {
-                0: {
-                    "big_pit": app.board.players_data[0].big_pit,
-                    "pits": app.players[0].board.players_data[0].pits,
-                },
-                1: {
-                    "big_pit": app.board.players_data[1].big_pit,
-                    "pits": app.players[1].board.players_data[1].pits,
-                },
-            },
-        }
+        logging.info("No session id provided; creating a new one (legacy /api/)")
+        return _create_new_session("0")
 
     session_state = get_session_state(sessionid)
     if not session_state:
-        # Session expired / not found: create a new one and return it.
-        logging.info("Session %s not found/expired; creating a new one", sessionid)
-        sessionid = str(uuid4())
-        set_session_state(sessionid, default_session_state(sessionid, "0"))
-        return {
-            "session_id": sessionid,
-            "difficulty": str(app.difficulty),
-            "turn": "0",
-            "winner": None,
-            "players": {
-                0: {
-                    "big_pit": app.board.players_data[0].big_pit,
-                    "pits": app.players[0].board.players_data[0].pits,
-                },
-                1: {
-                    "big_pit": app.board.players_data[1].big_pit,
-                    "pits": app.players[1].board.players_data[1].pits,
-                },
-            },
-        }
+        logging.info("Session %s not found/expired; creating a new one (legacy /api/)", sessionid)
+        return _create_new_session("0")
 
-    app.board = session_state["board"]
-    app.players = session_state["players"]
-    app.winner = session_state["winner"]
-    app.turn = session_state["turn"]
-    app.difficulty = session_state["difficulty"]
-
-    return {
-        "session_id": sessionid,
-        "difficulty": str(app.difficulty),
-        "turn": "0",
-        "winner": None,
-        "players": {
-            0: {
-                "big_pit": app.board.players_data[0].big_pit,
-                "pits": app.players[0].board.players_data[0].pits,
-            },
-            1: {
-                "big_pit": app.board.players_data[1].big_pit,
-                "pits": app.players[1].board.players_data[1].pits,
-            },
-        },
-    }
+    # Ensure generate_response sees it.
+    return generate_response(sessionid)
 
 
-@app.get("/api/select")
-def pit_selected(
-    userid: int = Query(ge=0, le=1),
-    pit: int = Query(ge=0, le=5),
-    sessionid: str = Query(default=""),
-):
-    """Api call upon selecting a pit to play from."""
+class SelectMoveRequest(BaseModel):
+    userid: int
+    pit: int
+
+
+class ResetRequest(BaseModel):
+    difficulty: int
+
+
+def _apply_move(sessionid: str, userid: int, pit: int) -> dict:
     session_state = get_session_state(sessionid)
     if not session_state:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -191,11 +171,10 @@ def pit_selected(
     return generate_response(sessionid)
 
 
-@app.get("/api/reset")
-def reset(sessionid: str = Query(default=""), difficulty: int = Query(ge=0, le=1)):
-    """Reset the game to it's initial state."""
-    if not sessionid:
-        sessionid = str(uuid4())
+def _reset_session(sessionid: str, difficulty: int) -> dict:
+    # Ensure the session exists (resetting a missing session should be explicit).
+    if not get_session_state(sessionid):
+        raise HTTPException(status_code=404, detail="Session not found")
 
     app.board.reset()
     app.players = {
@@ -213,6 +192,55 @@ def reset(sessionid: str = Query(default=""), difficulty: int = Query(ge=0, le=1
     session_state = default_session_state(sessionid, str(difficulty))
     set_session_state(sessionid, session_state)
     return generate_response(sessionid)
+
+
+@app.post("/api/sessions/{sessionid}/select")
+def session_select(sessionid: str, payload: SelectMoveRequest):
+    """Make a move within a session."""
+    # Extra safety: enforce expected ranges here too.
+    if payload.userid not in (0, 1):
+        raise HTTPException(status_code=422, detail="userid must be 0 or 1")
+    if payload.pit < 0 or payload.pit > 5:
+        raise HTTPException(status_code=422, detail="pit must be between 0 and 5")
+    return _apply_move(sessionid, payload.userid, payload.pit)
+
+
+@app.post("/api/sessions/{sessionid}/reset")
+def session_reset(sessionid: str, payload: ResetRequest):
+    """Reset an existing session."""
+    if payload.difficulty not in (0, 1):
+        raise HTTPException(status_code=422, detail="difficulty must be 0 or 1")
+    return _reset_session(sessionid, payload.difficulty)
+
+
+# Legacy endpoints (querystring-based)
+@app.get("/api/select")
+def pit_selected(
+    userid: int = Query(ge=0, le=1),
+    pit: int = Query(ge=0, le=5),
+    sessionid: str = Query(default=""),
+):
+    """Legacy: Api call upon selecting a pit to play from."""
+    return _apply_move(sessionid, userid, pit)
+
+
+@app.get("/api/reset")
+def reset(sessionid: str = Query(default=""), difficulty: int = Query(ge=0, le=1)):
+    """Legacy: Reset the game to it's initial state.
+
+    Historically this created a new session if no sessionid was provided.
+    """
+    if not sessionid:
+        sessionid = str(uuid4())
+        set_session_state(sessionid, default_session_state(sessionid, str(difficulty)))
+        return generate_response(sessionid)
+
+    # If the session exists, reset it; otherwise keep old behavior of creating a new one.
+    if not get_session_state(sessionid):
+        set_session_state(sessionid, default_session_state(sessionid, str(difficulty)))
+        return generate_response(sessionid)
+
+    return _reset_session(sessionid, difficulty)
 
 
 app.mount("/static", StaticFiles(directory="static"), name="static")

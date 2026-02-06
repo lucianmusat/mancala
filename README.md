@@ -4,6 +4,12 @@ Can be played online [here](http://mancala.lucianmusat.nl/). It's self-hosted, s
 
 ![How it looks](screenshot.png)
 
+## How it works (high level)
+
+- Frontend is client-side rendered (Rust/Yew + WebAssembly).
+- Backend is a small API server.
+- The game uses a session id stored in the browser (localStorage). If it’s missing/expired, a new session is created.
+
 ## Rules
 
 ### Gameplay
@@ -25,6 +31,6 @@ the game is the player who has the most stones in his big pit.
 
 ### TODO:
  - [X] Add client side rendering (Client side rendering is added using Rust and WebAssembly - Yew framework)
- - [ ] Add POST endpoint for session generation, store in local storage
- - [ ] Refactor the routing
- - [ ] Add expiring map for sessions, instead of using Redis
+ - [X] Add POST endpoint for session generation, store in local storage
+ - [X] Refactor the routing
+ - [X] Add expiring map for sessions, instead of using Redis

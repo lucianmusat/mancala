@@ -6,9 +6,10 @@ use crate::components::atoms::dropdown::Dropdown;
 use log::error;
 use yewdux::prelude::*;
 use reqwasm::http::Request;
+use serde_json;
 use crate::common::types::{BACKEND_URL};
 use crate::Route;
-use crate::stores::state_store::{StateStore, update_game_data, fetch_game_data};
+use crate::stores::state_store::{StateStore, update_game_data};
 
 
 #[function_component(TopMenu)]
@@ -40,16 +41,24 @@ pub fn top_menu() -> Html {
             let dispatch = dispatch.clone();
             let store = store.clone();
             if let Some(data) = &store.game_data {
-                let url = format!("{}/reset?sessionid={}&difficulty={}", BACKEND_URL, data.session_id.clone(), data.difficulty.clone() as u8);
-                let game_data = store.game_data.clone();
+                let url = format!("{}/sessions/{}/reset", BACKEND_URL, data.session_id);
+                let body = serde_json::json!({
+                    "difficulty": data.difficulty.clone() as u8,
+                });
+
                 wasm_bindgen_futures::spawn_local(async move {
-                    match Request::get(&url).send().await {
-                        Ok(_) => {
-                            match fetch_game_data(Some(game_data.unwrap().session_id.clone())).await {
+                    match Request::post(&url)
+                        .header("Content-Type", "application/json")
+                        .body(body.to_string())
+                        .send()
+                        .await
+                    {
+                        Ok(resp) => {
+                            match resp.json::<crate::common::types::GameData>().await {
                                 Ok(new_data) => update_game_data(&dispatch, new_data),
-                                Err(err) => log::error!("Failed to fetch new game data: {}", err),
+                                Err(err) => log::error!("Failed to parse reset response: {}", err),
                             }
-                        },
+                        }
                         Err(err) => error!("Reset failed: {}", err),
                     }
                 });
